@@ -1,0 +1,14 @@
+*.projdata
+*.pdb
+*.positions
+*proj.user
+*proj.*.user
+*.ncb
+*.suo
+*.plg
+*.opt
+*.ilk
+*.pch
+*.idb
+*.clw
+*.aps
