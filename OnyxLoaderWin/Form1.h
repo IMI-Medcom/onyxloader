@@ -628,6 +628,7 @@ enum {
         this->StatusLabel->Text = message;
         //this->StatusLabel->Invalidate();
         this->Invalidate();
+        this->Update();
     }
 
     private: System::Void FillComboBox(UInt32 dwDescFlags) {
