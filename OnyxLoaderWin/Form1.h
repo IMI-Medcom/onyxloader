@@ -229,11 +229,6 @@ enum {
 	private: System::Threading::Thread ^ thrdReader;
 
 
-
-
-
-
-
 	private: bool bContinue;
 	private: UInt32 dwOpenFlags;
 	private: ManualResetEvent ^ ev;
@@ -248,6 +243,8 @@ enum {
 	private: System::Windows::Forms::Label ^  label1;
 	private: System::Windows::Forms::Label ^  label2;
     private: System::Windows::Forms::Button^  btnProgLocal;
+    private: System::Windows::Forms::Label^  StatusLabel;
+
 
 
 	private:
@@ -272,6 +269,7 @@ enum {
             this->label1 = (gcnew System::Windows::Forms::Label());
             this->label2 = (gcnew System::Windows::Forms::Label());
             this->btnProgLocal = (gcnew System::Windows::Forms::Button());
+            this->StatusLabel = (gcnew System::Windows::Forms::Label());
             this->SuspendLayout();
             // 
             // btnClose
@@ -357,10 +355,24 @@ enum {
             this->btnProgLocal->Text = L"Local Firmware";
             this->btnProgLocal->Click += gcnew System::EventHandler(this, &Form1::btnProgLocal_Click);
             // 
+            // StatusLabel
+            // 
+            this->StatusLabel->AutoSize = true;
+            this->StatusLabel->Location = System::Drawing::Point(12, 150);
+            this->StatusLabel->MaximumSize = System::Drawing::Size(270, 0);
+            this->StatusLabel->MinimumSize = System::Drawing::Size(270, 0);
+            this->StatusLabel->Name = L"StatusLabel";
+            this->StatusLabel->Size = System::Drawing::Size(270, 13);
+            this->StatusLabel->TabIndex = 10;
+            this->StatusLabel->Text = L"Idle, Device Not Connected";
+            this->StatusLabel->TextAlign = System::Drawing::ContentAlignment::TopCenter;
+            this->StatusLabel->Click += gcnew System::EventHandler(this, &Form1::StatusLabel_Click);
+            // 
             // Form1
             // 
             this->AutoScaleBaseSize = System::Drawing::Size(5, 13);
-            this->ClientSize = System::Drawing::Size(287, 146);
+            this->ClientSize = System::Drawing::Size(287, 182);
+            this->Controls->Add(this->StatusLabel);
             this->Controls->Add(this->btnProgLocal);
             this->Controls->Add(this->label2);
             this->Controls->Add(this->label1);
@@ -373,8 +385,8 @@ enum {
             this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
             this->Location = System::Drawing::Point(56, 48);
             this->MaximizeBox = false;
-            this->MaximumSize = System::Drawing::Size(303, 184);
-            this->MinimumSize = System::Drawing::Size(303, 184);
+            this->MaximumSize = System::Drawing::Size(303, 220);
+            this->MinimumSize = System::Drawing::Size(303, 220);
             this->Name = L"Form1";
             this->Text = L"OnyxLoader";
             this->Load += gcnew System::EventHandler(this, &Form1::Form1_Load);
@@ -465,6 +477,8 @@ enum {
     private: System::Void runFlash(char *szUrl) {
         // Download flash image from http://41j.com/safecast_latest.bin
 
+        UpdateUserMessage("Running, Firmware Is Downloading, Do Not Disconnect");
+                                  
         HINTERNET hOpen = InternetOpen("WinSock",INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
         HANDLE hFile     = INVALID_HANDLE_VALUE;
         HANDLE hTempFile = INVALID_HANDLE_VALUE; 
@@ -533,6 +547,8 @@ enum {
         fflush (pFile);
         fclose (pFile);
 
+        UpdateUserMessage("Running, Firmware Has Downloaded, Do Not Disconnect");
+
         runFlashLocal(szFileName);
     
     } // end of runFlash()
@@ -542,6 +558,8 @@ enum {
     private: System::Void runFlashLocal(char* szFileName) {
         // Flash    
         
+        UpdateUserMessage("Running, Firmware Is Being Flashed, Do Not Disconnect");
+
         int argc=3;
         char *argv[3];
         
@@ -556,9 +574,11 @@ enum {
         int result = do_flash_main(argc,argv);
         if (result == 0) {
             MessageBox::Show("Flash Completed Successfully");
+            UpdateUserMessage("Idle, Device Is Connected");
         }
         else {
             MessageBox::Show("Flash Programming failed");
+            UpdateUserMessage("Idle, Device Is Connected");
         }
     }
 
@@ -598,65 +618,65 @@ enum {
             const char* FileName = context->marshal_as<const char*>(openFileDialog1->FileName);
             strcpy(szFileName, FileName);
             MessageBox::Show("Begin flashing this firmware to device:  " + openFileDialog1->FileName);
+            
+            runFlashLocal(szFileName);
         }
 
-        runFlashLocal(szFileName);
     }
 
-private: System::Void FillComboBox(UInt32 dwDescFlags)
-	{
-	
-	}
-private: System::Void StopThread()
-		 {
-			bContinue = false;
-			if(hEvent)		// let the thread come out of waiting for infinite time
-				SetEvent(hEvent);
-			if(thrdReader && thrdReader->IsAlive) {	// stop it
-			 	TimeSpan waitTime = TimeSpan(0, 0, 1);	// 1 second timeout
-				if(thrdReader->Join(waitTime) != true) {
-					thrdReader->Abort();	// didnt stop the thread - take more drastic action
-				}
-			}
-		 }
+    private: System::Void UpdateUserMessage(System::String ^ message) {       
+        this->StatusLabel->Text = message;
+        //this->StatusLabel->Invalidate();
+        this->Invalidate();
+    }
 
-private: System::Void StartThread()
-		 {
-			 // Create a reader thread here
-			thrdReader = gcnew Thread(gcnew ThreadStart(this, &TryUSB::Form1::ReadingProc));
-			bContinue = true;
-			thrdReader->Start();
-			while (!thrdReader->IsAlive);	// wait for the thread to start
-			Thread::Sleep(1000);
-		 }
+    private: System::Void FillComboBox(UInt32 dwDescFlags) {
+    
+    }
 
-private: System::Void Form1_Load(System::Object ^  sender, System::EventArgs ^  e)
-		{	
-			handle = NULL;
-			hEvent = CreateEvent(NULL, FALSE, FALSE, "");
-	
-		}
+    private: System::Void StopThread() {
+        bContinue = false;
+        if(hEvent)		// let the thread come out of waiting for infinite time
+            SetEvent(hEvent);
+        if(thrdReader && thrdReader->IsAlive) {	// stop it
+            TimeSpan waitTime = TimeSpan(0, 0, 1);	// 1 second timeout
+            if(thrdReader->Join(waitTime) != true) {
+                thrdReader->Abort();	// didnt stop the thread - take more drastic action
+            }
+        }
+    }
 
-private: System::Void comboBox1_SelectedIndexChanged(System::Object ^  sender, System::EventArgs ^  e)
-		{
-			ClosePort();			 
-			OpenPort();
-		}
+    private: System::Void StartThread() {
+        // Create a reader thread here
+        thrdReader = gcnew Thread(gcnew ThreadStart(this, &TryUSB::Form1::ReadingProc));
+        bContinue = true;
+        thrdReader->Start();
+        while (!thrdReader->IsAlive);	// wait for the thread to start
+        Thread::Sleep(1000);
+    }
 
-private: System::Void radioNumber_CheckedChanged(System::Object ^  sender, System::EventArgs ^  e)
-		 {
+    private: System::Void Form1_Load(System::Object ^  sender, System::EventArgs ^  e) {	
+        handle = NULL;
+        hEvent = CreateEvent(NULL, FALSE, FALSE, "");
+    }
 
-		 }
+    private: System::Void comboBox1_SelectedIndexChanged(System::Object ^  sender, System::EventArgs ^  e) {
+        ClosePort(); 
+        OpenPort();
+    }
 
-private: System::Void radioDescription_CheckedChanged(System::Object ^  sender, System::EventArgs ^  e)
-		 {
+    private: System::Void radioNumber_CheckedChanged(System::Object ^  sender, System::EventArgs ^  e) {
+    }
 
-		 }
+    private: System::Void radioDescription_CheckedChanged(System::Object ^  sender, System::EventArgs ^  e) {
+    }
 
-private: System::Void radioSerial_CheckedChanged(System::Object ^  sender, System::EventArgs ^  e)
-		 {
+    private: System::Void radioSerial_CheckedChanged(System::Object ^  sender, System::EventArgs ^  e) {
+    }
 
-		 }
+    private: System::Void StatusLabel_Click(System::Object^  sender, System::EventArgs^  e) {
+    }
+
 };
 }
 
