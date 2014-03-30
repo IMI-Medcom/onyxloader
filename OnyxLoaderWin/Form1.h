@@ -144,7 +144,7 @@ enum {
 	///          the designers will not be able to interact properly with localized
 	///          resources associated with this form.
 	/// </summary>
-	public __gc class Form1 : public System::Windows::Forms::Form
+    public ref class Form1 : public System::Windows::Forms::Form
 	{	
 	public:
 		Form1(void)
@@ -155,8 +155,8 @@ enum {
 	private:
 		void ReadingProc()
         {
-			ArrayList * palReadData;
-			palReadData = new ArrayList();
+			ArrayList ^ palReadData;
+			palReadData = gcnew ArrayList();
 			TimeSpan waitTime = TimeSpan(0, 0, 1);	// 1 second timeout
 			static char c = 0;
 			char* pstr6 = &c;
@@ -165,7 +165,7 @@ enum {
 			while(bContinue) {
 				DWORD dwRead, dwRXBytes;
 				Byte b;
-				NumberFormatInfo*   provider = new NumberFormatInfo( );
+				NumberFormatInfo^   provider = gcnew NumberFormatInfo( );
 
 				WaitForSingleObject(hEvent, -1);
 				if(handle) {
@@ -194,9 +194,21 @@ enum {
 				FT_Close(handle);
 			}
         }
-  
+
+        ~Form1(){
+            StopThread();		// Close our thread
+            
+            //RS - using CLI "Dispose" apparently maps to destructor
+
+            bool disposing = true;
+            if (disposing && components)
+            {
+                //components->Dispose();
+            }
+            //__super::Dispose(disposing);
+        }
 	protected:
-		void Dispose(Boolean disposing)
+		/*void Dispose(Boolean disposing)
 		{
 			StopThread();		// Close our thread
 
@@ -205,12 +217,12 @@ enum {
 				components->Dispose();
 			}
 			__super::Dispose(disposing);
-		}
+		}*/
 
-	private: System::Windows::Forms::Button *  btnClose;
-	private: System::Windows::Forms::Button *  btnProgRelease;
+	private: System::Windows::Forms::Button ^  btnClose;
+	private: System::Windows::Forms::Button ^  btnProgRelease;
 
-	private: System::Threading::Thread * thrdReader;
+	private: System::Threading::Thread ^ thrdReader;
 
 
 
@@ -220,24 +232,24 @@ enum {
 
 	private: bool bContinue;
 	private: UInt32 dwOpenFlags;
-	private: ManualResetEvent * ev;
-	private: System::Windows::Forms::Button *  btnProgBeta;
-	private: System::Windows::Forms::Button *  btnProgExp;
+	private: ManualResetEvent ^ ev;
+	private: System::Windows::Forms::Button ^  btnProgBeta;
+	private: System::Windows::Forms::Button ^  btnProgExp;
 
 
-	private: System::Windows::Forms::Button *  btnSave;
-	private: System::Windows::Forms::Button *  btnSetTime;
+	private: System::Windows::Forms::Button ^  btnSave;
+	private: System::Windows::Forms::Button ^  btnSetTime;
 
 
-	private: System::Windows::Forms::Label *  label1;
-	private: System::Windows::Forms::Label *  label2;
+	private: System::Windows::Forms::Label ^  label1;
+	private: System::Windows::Forms::Label ^  label2;
 
 
 	private:
 		/// <summary>
 		/// Required designer variable.
 		/// </summary>
-		System::ComponentModel::Container * components;
+		System::ComponentModel::Container ^ components;
 
 		/// <summary>
 		/// Required method for Designer support - do not modify
@@ -245,122 +257,120 @@ enum {
 		/// </summary>
 		void InitializeComponent(void)
 		{
-			this->btnClose       = (new System::Windows::Forms::Button());
-			this->btnProgRelease = (new System::Windows::Forms::Button());
-			this->btnProgBeta    = (new System::Windows::Forms::Button());
-			this->btnProgExp     = (new System::Windows::Forms::Button());
-			this->btnSave        = (new System::Windows::Forms::Button());
-			this->btnSetTime     = (new System::Windows::Forms::Button());
-			this->label1         = (new System::Windows::Forms::Label());
-			this->label2         = (new System::Windows::Forms::Label());
-			this->SuspendLayout();
-			// 
-			// btnClose
-			// 
-			this->btnClose->Location = System::Drawing::Point(511, 51);
-			this->btnClose->Name = L"btnClose";
-			this->btnClose->Size = System::Drawing::Size(115, 10);
-			this->btnClose->TabIndex = 1;
-			this->btnClose->Text = L"Upload Log";
-			this->btnClose->Click += new System::EventHandler(this, &Form1::ButtonCancel_Click);
-			// 
-			// btnProgRelease
-			// 
-			this->btnProgRelease->Location = System::Drawing::Point(137, 25);
-			this->btnProgRelease->Name = L"btnProgRelease";
-			this->btnProgRelease->Size = System::Drawing::Size(138, 23);
-			this->btnProgRelease->TabIndex = 2;
-			this->btnProgRelease->Text = L"Latest Release";
-			this->btnProgRelease->Click += new System::EventHandler(this, &Form1::btnProgRelease_Click);
-			// 
-			// btnProgBeta
-			// 
-			this->btnProgBeta->Location = System::Drawing::Point(137, 54);
-			this->btnProgBeta->Name = L"btnProgBeta";
-			this->btnProgBeta->Size = System::Drawing::Size(138, 23);
-			this->btnProgBeta->TabIndex = 3;
-			this->btnProgBeta->Text = L"Beta Release";
-			this->btnProgBeta->Click += new System::EventHandler(this, &Form1::btnProgBeta_Click);
+            System::ComponentModel::ComponentResourceManager^  resources = (gcnew System::ComponentModel::ComponentResourceManager(Form1::typeid));
+            this->btnClose = (gcnew System::Windows::Forms::Button());
+            this->btnProgRelease = (gcnew System::Windows::Forms::Button());
+            this->btnProgBeta = (gcnew System::Windows::Forms::Button());
+            this->btnProgExp = (gcnew System::Windows::Forms::Button());
+            this->btnSave = (gcnew System::Windows::Forms::Button());
+            this->btnSetTime = (gcnew System::Windows::Forms::Button());
+            this->label1 = (gcnew System::Windows::Forms::Label());
+            this->label2 = (gcnew System::Windows::Forms::Label());
+            this->SuspendLayout();
+            // 
+            // btnClose
+            // 
+            this->btnClose->Location = System::Drawing::Point(511, 51);
+            this->btnClose->Name = L"btnClose";
+            this->btnClose->Size = System::Drawing::Size(115, 10);
+            this->btnClose->TabIndex = 1;
+            this->btnClose->Text = L"Upload Log";
+            this->btnClose->Click += gcnew System::EventHandler(this, &Form1::ButtonCancel_Click);
+            // 
+            // btnProgRelease
+            // 
+            this->btnProgRelease->Location = System::Drawing::Point(137, 25);
+            this->btnProgRelease->Name = L"btnProgRelease";
+            this->btnProgRelease->Size = System::Drawing::Size(138, 23);
+            this->btnProgRelease->TabIndex = 2;
+            this->btnProgRelease->Text = L"Latest Release";
+            this->btnProgRelease->Click += gcnew System::EventHandler(this, &Form1::btnProgRelease_Click);
+            // 
+            // btnProgBeta
+            // 
+            this->btnProgBeta->Location = System::Drawing::Point(137, 54);
+            this->btnProgBeta->Name = L"btnProgBeta";
+            this->btnProgBeta->Size = System::Drawing::Size(138, 23);
+            this->btnProgBeta->TabIndex = 3;
+            this->btnProgBeta->Text = L"Beta Release";
+            this->btnProgBeta->Click += gcnew System::EventHandler(this, &Form1::btnProgBeta_Click);
+            // 
+            // btnProgExp
+            // 
+            this->btnProgExp->Location = System::Drawing::Point(137, 83);
+            this->btnProgExp->Name = L"btnProgExp";
+            this->btnProgExp->Size = System::Drawing::Size(138, 23);
+            this->btnProgExp->TabIndex = 4;
+            this->btnProgExp->Text = L"Experimental Release";
+            this->btnProgExp->Click += gcnew System::EventHandler(this, &Form1::btnProgExp_Click);
+            // 
+            // btnSave
+            // 
+            this->btnSave->Location = System::Drawing::Point(12, 25);
+            this->btnSave->Name = L"btnSave";
+            this->btnSave->Size = System::Drawing::Size(119, 23);
+            this->btnSave->TabIndex = 5;
+            this->btnSave->Text = L"Save Data";
+            this->btnSave->Click += gcnew System::EventHandler(this, &Form1::btnSave_Click);
+            // 
+            // btnSetTime
+            // 
+            this->btnSetTime->Location = System::Drawing::Point(12, 54);
+            this->btnSetTime->Name = L"btnSetTime";
+            this->btnSetTime->Size = System::Drawing::Size(119, 23);
+            this->btnSetTime->TabIndex = 6;
+            this->btnSetTime->Text = L"Set Time";
+            this->btnSetTime->Click += gcnew System::EventHandler(this, &Form1::btnSetTime_Click);
+            // 
+            // label1
+            // 
+            this->label1->AutoSize = true;
+            this->label1->Location = System::Drawing::Point(137, 9);
+            this->label1->Name = L"label1";
+            this->label1->Size = System::Drawing::Size(87, 13);
+            this->label1->TabIndex = 7;
+            this->label1->Text = L"Update Firmware";
+            // 
+            // label2
+            // 
+            this->label2->AutoSize = true;
+            this->label2->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 6.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+                static_cast<System::Byte>(0)));
+            this->label2->Location = System::Drawing::Point(0, 0);
+            this->label2->Name = L"label2";
+            this->label2->Size = System::Drawing::Size(52, 12);
+            this->label2->TabIndex = 8;
+            this->label2->Text = L"Version 0.1";
+            // 
+            // Form1
+            // 
+            this->AutoScaleBaseSize = System::Drawing::Size(5, 13);
+            this->ClientSize = System::Drawing::Size(287, 115);
+            this->Controls->Add(this->label2);
+            this->Controls->Add(this->label1);
+            this->Controls->Add(this->btnSetTime);
+            this->Controls->Add(this->btnSave);
+            this->Controls->Add(this->btnProgExp);
+            this->Controls->Add(this->btnProgBeta);
+            this->Controls->Add(this->btnProgRelease);
+            this->Controls->Add(this->btnClose);
+            this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
+            this->Location = System::Drawing::Point(56, 48);
+            this->MaximizeBox = false;
+            this->MaximumSize = System::Drawing::Size(303, 153);
+            this->MinimumSize = System::Drawing::Size(303, 153);
+            this->Name = L"Form1";
+            this->Text = L"OnyxLoader";
+            this->Load += gcnew System::EventHandler(this, &Form1::Form1_Load);
+            this->ResumeLayout(false);
+            this->PerformLayout();
 
-			// 
-			// btnProgExp
-			// 
-			this->btnProgExp->Location = System::Drawing::Point(137, 83);
-			this->btnProgExp->Name = L"btnProgExp";
-			this->btnProgExp->Size = System::Drawing::Size(138, 23);
-			this->btnProgExp->TabIndex = 4;
-			this->btnProgExp->Text = L"Experimental Release";
-			this->btnProgExp->Click += new System::EventHandler(this, &Form1::btnProgExp_Click);
+        }
 
-			// 
-			// btnSave
-			// 
-			this->btnSave->Location = System::Drawing::Point(12, 25);
-			this->btnSave->Name = L"btnSave";
-			this->btnSave->Size = System::Drawing::Size(119, 23);
-			this->btnSave->TabIndex = 5;
-			this->btnSave->Text = L"Save Data";
-			this->btnSave->Click += new System::EventHandler(this, &Form1::btnSave_Click);
-
-			// 
-			// btnSetTime
-			// 
-			this->btnSetTime->Location = System::Drawing::Point(12, 54);
-			this->btnSetTime->Name = L"btnSetTime";
-			this->btnSetTime->Size = System::Drawing::Size(119, 23);
-			this->btnSetTime->TabIndex = 6;
-			this->btnSetTime->Text = L"Set Time";
-			this->btnSetTime->Click += new System::EventHandler(this, &Form1::btnSetTime_Click);
-
-			// 
-			// label1
-			// 
-			this->label1->AutoSize = true;
-			this->label1->Location = System::Drawing::Point(137, 9);
-			this->label1->Name = L"label1";
-			this->label1->Size = System::Drawing::Size(87, 13);
-			this->label1->TabIndex = 7;
-			this->label1->Text = L"Update Firmware";
-			// 
-			// label2
-			// 
-			this->label2->AutoSize = true;
-			this->label2->Font = (new System::Drawing::Font(L"Microsoft Sans Serif", 6.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
-				static_cast<System::Byte>(0)));
-			this->label2->Location = System::Drawing::Point(0, 0);
-			this->label2->Name = L"label2";
-			this->label2->Size = System::Drawing::Size(52, 12);
-			this->label2->TabIndex = 8;
-			this->label2->Text = L"Version 0.1";
-			// 
-			// Form1
-			// 
-			this->AutoScaleBaseSize = System::Drawing::Size(5, 13);
-			this->ClientSize = System::Drawing::Size(287, 115);
-			this->Controls->Add(this->label2);
-			this->Controls->Add(this->label1);
-			this->Controls->Add(this->btnSetTime);
-			this->Controls->Add(this->btnSave);
-			this->Controls->Add(this->btnProgExp);
-			this->Controls->Add(this->btnProgBeta);
-			this->Controls->Add(this->btnProgRelease);
-			this->Controls->Add(this->btnClose);
-			this->Location = System::Drawing::Point(56, 48);
-			this->MaximizeBox = false;
-			this->MaximumSize = System::Drawing::Size(303, 153);
-			this->MinimumSize = System::Drawing::Size(303, 153);
-			this->Name = L"Form1";
-			this->Text = L"OnyxLoader";
-			this->Load += new System::EventHandler(this, &Form1::Form1_Load);
-			this->ResumeLayout(false);
-			this->PerformLayout();
-
-		}	
-
-	private: System::Void btnSave_Click(System::Object *  sender, System::EventArgs *  e)
+	private: System::Void btnSave_Click(System::Object ^  sender, System::EventArgs ^  e)
 			{
 				
-            SaveFileDialog* sfd = new SaveFileDialog();
+            SaveFileDialog^ sfd = gcnew SaveFileDialog();
             sfd->Filter = "CSV Files|*.csv|All Files|*.*";
 			sfd->AddExtension = true;
 
@@ -371,7 +381,7 @@ enum {
                 return;
             }
 
-			FileStream * fs = new FileStream(sfd->FileName,FileMode::Create);
+			FileStream ^ fs = gcnew FileStream(sfd->FileName,FileMode::Create);
 
 				char *data = do_get_log_csv();
 
@@ -383,13 +393,13 @@ enum {
 				MessageBox::Show( "Save Complete" );
 			}
 
-	private: System::Void btnSetTime_Click(System::Object *  sender, System::EventArgs *  e)
+	private: System::Void btnSetTime_Click(System::Object ^  sender, System::EventArgs ^  e)
 			{
 				do_set_time();
 				MessageBox::Show( "Time Set" );
 			}
 
-	private: System::Void ButtonCancel_Click(System::Object *  sender, System::EventArgs *  e)
+	private: System::Void ButtonCancel_Click(System::Object ^  sender, System::EventArgs ^  e)
 			{
 				printf("Sending log\n");
 
@@ -519,18 +529,18 @@ enum {
 	           else MessageBox::Show("Flash Programming failed");
 	}
 
-	private: System::Void btnProgRelease_Click(System::Object *  sender, System::EventArgs *  e) {
+	private: System::Void btnProgRelease_Click(System::Object ^  sender, System::EventArgs ^  e) {
 	    char *szUrl = "http://41j.com/safecast_latest.bin"; // URL
 		runFlash(szUrl);
 	}
 
-	private: System::Void btnProgBeta_Click(System::Object *  sender, System::EventArgs *  e) {
+	private: System::Void btnProgBeta_Click(System::Object ^  sender, System::EventArgs ^  e) {
 		MessageBox::Show("Programming Beta Firmware: This firmware is for user testing only, and is not supported by Medcom International." );
 	    char *szUrl = "http://41j.com/safecast_beta.bin"; // URL
 		runFlash(szUrl);
 	}
 
-	private: System::Void btnProgExp_Click(System::Object *  sender, System::EventArgs *  e) {
+	private: System::Void btnProgExp_Click(System::Object ^  sender, System::EventArgs ^  e) {
 		MessageBox::Show("Programming Beta Firmware: This firmware is for user testing only, and is not supported by Medcom International." );
 		char *szUrl = "http://41j.com/safecast_exp.bin"; // URL
 		runFlash(szUrl);
@@ -556,37 +566,37 @@ private: System::Void StopThread()
 private: System::Void StartThread()
 		 {
 			 // Create a reader thread here
-			thrdReader = new Thread(new ThreadStart(this, &TryUSB::Form1::ReadingProc));
+			thrdReader = gcnew Thread(gcnew ThreadStart(this, &TryUSB::Form1::ReadingProc));
 			bContinue = true;
 			thrdReader->Start();
 			while (!thrdReader->IsAlive);	// wait for the thread to start
 			Thread::Sleep(1000);
 		 }
 
-private: System::Void Form1_Load(System::Object *  sender, System::EventArgs *  e)
+private: System::Void Form1_Load(System::Object ^  sender, System::EventArgs ^  e)
 		{	
 			handle = NULL;
 			hEvent = CreateEvent(NULL, FALSE, FALSE, "");
 	
 		}
 
-private: System::Void comboBox1_SelectedIndexChanged(System::Object *  sender, System::EventArgs *  e)
+private: System::Void comboBox1_SelectedIndexChanged(System::Object ^  sender, System::EventArgs ^  e)
 		{
 			ClosePort();			 
 			OpenPort();
 		}
 
-private: System::Void radioNumber_CheckedChanged(System::Object *  sender, System::EventArgs *  e)
+private: System::Void radioNumber_CheckedChanged(System::Object ^  sender, System::EventArgs ^  e)
 		 {
 
 		 }
 
-private: System::Void radioDescription_CheckedChanged(System::Object *  sender, System::EventArgs *  e)
+private: System::Void radioDescription_CheckedChanged(System::Object ^  sender, System::EventArgs ^  e)
 		 {
 
 		 }
 
-private: System::Void radioSerial_CheckedChanged(System::Object *  sender, System::EventArgs *  e)
+private: System::Void radioSerial_CheckedChanged(System::Object ^  sender, System::EventArgs ^  e)
 		 {
 
 		 }
