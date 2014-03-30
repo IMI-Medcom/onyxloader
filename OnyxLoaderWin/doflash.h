@@ -7,9 +7,7 @@
 	(assuming you have the d2xx library in the /usr/local/lib directory).
 	gcc -o simple main.c -L. -lftd2xx -Wl,-rpath /usr/local/lib
 */
-#pragma once
 
-//#include <WinBase.h>
 #include "stm32ld/stm32ld.h"
 #include <ctype.h>
 #include <stdlib.h>
@@ -18,11 +16,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include "stm32ld/serial.h"
+#include <time.h>
 
 #include <errno.h>
 #include <limits.h>
 
 #include "ftd2xx.h"
+#include "jsmn.h"
 
 #define BL_VERSION_MAJOR  2
 #define BL_VERSION_MINOR  1
@@ -36,7 +36,7 @@
 FT_HANDLE	ftHandle[MAX_DEVICES];
 char 	        cBufLD[MAX_DEVICES][64];
 int             foundDevices = 0;
-//extern int32_t stm32_ser_id;
+extern int stm32_ser_id;
 int ser_dbg = 0;
 
 static  FILE *fp_page1;
@@ -69,40 +69,42 @@ int getandcheckCBUS( FT_HANDLE ftHandle0 ) {
     return 1;
   }
 
+  /*
   if( ser_dbg ) {
-//    printf("Cbus0 = 0x%X\n", Data.Cbus0);				// Cbus Mux control
- //   printf("Cbus1 = 0x%X\n", Data.Cbus1);				// Cbus Mux control
-  //  printf("Cbus2 = 0x%X\n", Data.Cbus2);				// Cbus Mux control
-  //  printf("Cbus3 = 0x%X\n", Data.Cbus3);				// Cbus Mux control
-  //  printf("Cbus4 = 0x%X\n", Data.Cbus4);				// Cbus Mux control
+    printf("Cbus0 = 0x%X\n", Data.Cbus0);				// Cbus Mux control
+    printf("Cbus1 = 0x%X\n", Data.Cbus1);				// Cbus Mux control
+    printf("Cbus2 = 0x%X\n", Data.Cbus2);				// Cbus Mux control
+    printf("Cbus3 = 0x%X\n", Data.Cbus3);				// Cbus Mux control
+    printf("Cbus4 = 0x%X\n", Data.Cbus4);				// Cbus Mux control
   }
 
   // check that cbus0 and 2 are write
-//  if( Data.Cbus0 != 0x0A ) {
-//    printf( "Cbus0 is %d, should be %d, updating!\n", Data.Cbus0, 0xA );
-//    Data.Cbus0 = 0x0A;
-//    need_write = 1;
-//  }
+  if( Data.Cbus0 != 0x0A ) {
+    printf( "Cbus0 is %d, should be %d, updating!\n", Data.Cbus0, 0xA );
+    Data.Cbus0 = 0x0A;
+    need_write = 1;
+  }
   
-//  if( Data.Cbus2 != 0x0A ) {
-//    printf( "Cbus2 is %d, should be %d, updating!\n", Data.Cbus2, 0xA );
-//    Data.Cbus2 = 0x0A;
-//    need_write = 1;
-//  }
+  if( Data.Cbus2 != 0x0A ) {
+    printf( "Cbus2 is %d, should be %d, updating!\n", Data.Cbus2, 0xA );
+    Data.Cbus2 = 0x0A;
+    need_write = 1;
+  }
 
   // check that CBUS3 is power enable
-//  if( Data.Cbus3 != 0x01 ) {
-//    printf( "Cbus3 is %d, should be %d, updating!\n", Data.Cbus3, 0x1);
-//    Data.Cbus2 = 0x0B;
-//    need_write = 1;
-//  }
+  if( Data.Cbus3 != 0x01 ) {
+    printf( "Cbus3 is %d, should be %d, updating!\n", Data.Cbus3, 0x1);
+    Data.Cbus2 = 0x0B;
+    need_write = 1;
+  }
 
-//  // not necessary, but for the hell of it, cbus 1 is read
-//  if( Data.Cbus1 != 0x0A ) {
- //   printf( "Cbus1 is %d, should be %d, updating!\n", Data.Cbus1, 0xA );
-  //  Data.Cbus1 = 0x0A;
- //   need_write = 1;
- // }
+  // not necessary, but for the hell of it, cbus 1 is read
+  if( Data.Cbus1 != 0x0A ) {
+    printf( "Cbus1 is %d, should be %d, updating!\n", Data.Cbus1, 0xA );
+    Data.Cbus1 = 0x0A;
+    need_write = 1;
+  }
+  */
 
   if( need_write ) {
     printf( "Updating EEPROM to correct setting for safecast.\n" );
@@ -121,7 +123,7 @@ int getandcheckCBUS( FT_HANDLE ftHandle0 ) {
 }
 
 
-ser_handler openSerialPorts8N1(int baud) {
+int openSerialPorts8N1(int baud) {
     char * 	pcBufRead = NULL;
     char * 	pcBufLD[MAX_DEVICES + 1];
     DWORD	dwRxSize = 0;
@@ -144,7 +146,7 @@ ser_handler openSerialPorts8N1(int baud) {
     
     if(ftStatus != FT_OK) {
         fprintf(stderr,"Error: FT_ListDevices(%d)\n", ftStatus);
-        return (ser_handler)-1;
+        return -1;
     }
     
     for(i = 0; ( (i <MAX_DEVICES) && (i < iNumDevs) ); i++) {
@@ -160,15 +162,15 @@ ser_handler openSerialPorts8N1(int baud) {
              also rmmod usbserial
              */
             fprintf(stderr,"Error FT_OpenEx(%d), device\n", ftStatus, i);
-            return (ser_handler)-1;
+            return -1;
         }
         
         printf("Opened device %s\n", cBufLD[i]);
         
-        //if(getandcheckCBUS(ftHandle[i]) ) {
-        //    printf( "getandcheckCBUS failed, exiting.\n" );
-        //    return -1;
-        //}
+       // if(getandcheckCBUS(ftHandle[i]) ) {
+       //     printf( "getandcheckCBUS failed, exiting.\n" );
+       //     return -1;
+       // }
         
         iDevicesOpen++;
         if((ftStatus = FT_SetBaudRate(ftHandle[i], baud)) != FT_OK) {
@@ -190,11 +192,11 @@ ser_handler openSerialPorts8N1(int baud) {
     
     if(pcBufRead)
         free(pcBufRead);
-    return 0;
-   // return (ser_handler) ftHandle[0]; // we always use the 0th device for now
+    
+    return 0; // we always use the 0th device for now
 }
 
-ser_handler openSerialPorts(int baud) {
+int openSerialPorts(int baud) {
   char * 	pcBufRead = NULL;
   char * 	pcBufLD[MAX_DEVICES + 1];
   DWORD	dwRxSize = 0;
@@ -217,7 +219,7 @@ ser_handler openSerialPorts(int baud) {
   
   if(ftStatus != FT_OK) {
     fprintf(stderr,"Error: FT_ListDevices(%d)\n", ftStatus);
-    return (ser_handler)-1;
+    return -1;
   }
   
   for(i = 0; ( (i <MAX_DEVICES) && (i < iNumDevs) ); i++) {
@@ -233,15 +235,15 @@ ser_handler openSerialPorts(int baud) {
 	 also rmmod usbserial
       */
       fprintf(stderr,"Error FT_OpenEx(%d), device\n", ftStatus, i);
-      return (ser_handler)-1;
+      return -1;
     }
     
     printf("Opened device %s\n", cBufLD[i]);
     
-   // if(getandcheckCBUS(ftHandle[i]) ) {
-   //   printf( "getandcheckCBUS failed, exiting.\n" );
-   //   return -1;
-   // }
+    //if(getandcheckCBUS(ftHandle[i]) ) {
+    //  printf( "getandcheckCBUS failed, exiting.\n" );
+    //  return -1;
+    //}
     
     iDevicesOpen++;
     if((ftStatus = FT_SetBaudRate(ftHandle[i], baud)) != FT_OK) {
@@ -264,7 +266,7 @@ ser_handler openSerialPorts(int baud) {
   if(pcBufRead)
     free(pcBufRead);
 
-  return 0;//(ser_handler) ftHandle[0]; // we always use the 0th device for now
+  return 0; // we always use the 0th device for now
 }
 
 // mode = 1 goes to bootloader, mode = 0 goes to normal
@@ -373,7 +375,7 @@ static void writeh_progress( u32 wrote )
 }
 
 
-char *read_to_prompt(ser_handler id) {
+char *read_to_prompt(int id) {
 
   char *data = (char *) malloc(10000);
   int   data_size  = 10000;
@@ -384,13 +386,13 @@ char *read_to_prompt(ser_handler id) {
   int lb=0;
   for(;;) {
     lb = b;
-    b = ser_read_byte((ser_handler)id);
+    b = ser_read_byte(id);
     if(b == -1) return data;
       
     data[wrote_size] = b;
     data[wrote_size+1] = 0;
     wrote_size++;
-    printf("read: %d %c\n",b,b);
+    //printf("read: %d %c\n",b,b);
     if(wrote_size == (data_size-5)) {
         data = (char *) realloc(data,data_size+10000);
         data_size += 10000;
@@ -401,37 +403,151 @@ char *read_to_prompt(ser_handler id) {
     
 }
 
-char *do_get_log() {
+char *do_get_log_csv() {
     
     // open serial ports
-    ser_handler id = openSerialPorts8N1(115200);
+    int id = openSerialPorts8N1(115200);
     
-    ser_write((ser_handler)id,(const u8 *) "\r\n\r\n",4);
-    Sleep(100);
-    ser_set_timeout_ms((ser_handler) id, SER_NO_TIMEOUT );
-    while( ser_read_byte((ser_handler)id) != -1 );
-    ser_set_timeout_ms((ser_handler) id, STM32_COMM_TIMEOUT );
+    ser_write(id,(const u8 *) "\r\n\r\n",4);
+    Sleep(500);
+    ser_set_timeout_ms( id, SER_NO_TIMEOUT );
+    while( ser_read_byte(id) != -1 );
+    ser_set_timeout_ms( id, STM32_COMM_TIMEOUT );
     
     
     printf("device id: %d\n",id);
     
     // Send Pause log
-    ser_write((ser_handler)id,(const u8 *) "LOGPAUSE\n",9);
-    free(read_to_prompt((ser_handler)id));
+    ser_write(id,(const u8 *) "LOGPAUSE\n",9);
+    free(read_to_prompt(id));
     
     // Send LOGXFER
-    ser_write((ser_handler)id,(const u8 *) "LOGXFER\n",8);
-    char *logdata = read_to_prompt((ser_handler)id);
-    
-    // Send LOGSIGN
-    ser_set_timeout_ms( (ser_handler)id, SER_INF_TIMEOUT );
-    ser_write((ser_handler)id,(const u8 *) "LOGSIG\n",8);
-    char *logsig = read_to_prompt((ser_handler)id);
-    ser_set_timeout_ms((ser_handler) id, STM32_COMM_TIMEOUT );
+    ser_write(id,(const u8 *) "LOGXFER\n",8);
+    char *logdata = read_to_prompt(id);
     
     // Send Resume log
-    ser_write((ser_handler)id,(const u8 *) "LOGRESUME\n",10);
-    free(read_to_prompt((ser_handler)id));
+    ser_write(id,(const u8 *) "LOGRESUME\n",10);
+    free(read_to_prompt(id));
+        
+    // close serial ports
+    closeSerialPorts();
+    
+    char *alldata = (char *) malloc(strlen(logdata)+100);
+    
+    strcpy(alldata,logdata);
+    int loglen = strlen(alldata);
+    alldata[loglen]=10;
+    alldata[loglen+1]=13;
+    alldata[loglen+2]=0;
+    
+    //parse json
+    
+    jsmn_parser parser;
+    jsmn_init(&parser);
+    
+    jsmntok_t *tokens = (jsmntok_t *) malloc(sizeof(jsmntok_t)*1000000);
+    
+    int r = jsmn_parse(&parser, alldata, tokens, 1000000);
+    
+    char *outdata = (char *) malloc(10000000);
+    char *outdatal = outdata;
+    if(r != JSMN_SUCCESS) {
+      strcpy(outdata,"READFAILED");
+    } else {
+    
+       bool processing=false;
+       for(size_t n=0;n<1000000;n++) {
+          if(tokens[n].type == JSMN_ARRAY) {
+            processing = true;
+            n++;
+            printf("detect array: %d\n",n);
+          }
+          
+          if(processing) {
+          
+            if(tokens[n].type == JSMN_STRING) {
+            
+              char *s = (char *) malloc(tokens[n].end-tokens[n].start+5);
+              strncpy(s,alldata+tokens[n].start,tokens[n].end-tokens[n].start);
+			  s[tokens[n].end-tokens[n].start]=0;
+
+              if(strcmp(s,"time") == 0) {
+                strncpy(outdatal,alldata+tokens[n+1].start,tokens[n+1].end-tokens[n+1].start);
+                outdatal+=(tokens[n+1].end-tokens[n+1].start);
+                outdatal[0]=',';
+                outdatal[1]=0;
+                outdatal++;
+              }
+
+              if(strcmp(s,"cpm") == 0) {
+                strncpy(outdatal,alldata+tokens[n+1].start,tokens[n+1].end-tokens[n+1].start);
+                outdatal+=(tokens[n+1].end-tokens[n+1].start);
+                outdatal[0]='\r';
+                outdatal[1]='\n';
+				outdatal[2]=0;
+                outdatal++;
+                outdatal++;
+			  }
+
+            }
+          
+          }
+       }
+       outdatal[0]=0;
+    
+    }
+    
+    free(logdata);
+
+    return outdata;
+}
+
+void do_set_time() {
+
+  uint32_t t = time(NULL);
+
+  int id = openSerialPorts8N1(115200);
+  ser_write(id,(const u8 *) "SETRTC\n",7);
+  Sleep(500);
+
+  char stime[100];
+  sprintf(stime,"%u\n",t);
+  ser_write(id,(const u8 *) stime,strlen(stime));
+
+  closeSerialPorts();
+}
+
+char *do_get_log() {
+    
+    // open serial ports
+    int id = openSerialPorts8N1(115200);
+    
+    ser_write(id,(const u8 *) "\r\n\r\n",4);
+    Sleep(500);
+    ser_set_timeout_ms( id, SER_NO_TIMEOUT );
+    while( ser_read_byte(id) != -1 );
+    ser_set_timeout_ms( id, STM32_COMM_TIMEOUT );
+    
+    
+    printf("device id: %d\n",id);
+    
+    // Send Pause log
+    ser_write(id,(const u8 *) "LOGPAUSE\n",9);
+    free(read_to_prompt(id));
+    
+    // Send LOGXFER
+    ser_write(id,(const u8 *) "LOGXFER\n",8);
+    char *logdata = read_to_prompt(id);
+    
+    // Send LOGSIGN
+    ser_set_timeout_ms( id, SER_INF_TIMEOUT );
+    ser_write(id,(const u8 *) "LOGSIG\n",8);
+    char *logsig = read_to_prompt(id);
+    ser_set_timeout_ms( id, STM32_COMM_TIMEOUT );
+    
+    // Send Resume log
+    ser_write(id,(const u8 *) "LOGRESUME\n",10);
+    free(read_to_prompt(id));
         
     // close serial ports
     closeSerialPorts();
@@ -448,9 +564,6 @@ char *do_get_log() {
     free(logsig);
     return alldata;
 }
-
-
-
 
 
 //getopt from http://notes.sonots.com/Comp/CompLAng/cpp/getopt.html  
@@ -512,7 +625,6 @@ int getopt(int argc,char ** argv,char *opts) {
 	}
 	return(c);
 }
-
 
 
 int do_flash_main(int argc, char **argv) {

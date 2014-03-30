@@ -1,6 +1,7 @@
 #pragma once
 
 #include "doflash.h"
+#include <Vcclr.h>
 #include <wininet.h>
 #pragma comment(lib, "wininet.lib")
 
@@ -15,7 +16,8 @@ namespace TryUSB
 	using namespace System::Threading;
 	using namespace System::Text;
 	using namespace System::Globalization;
-
+    using namespace System::IO;
+    using namespace System::Text;
 //	const UInt32 FT_LIST_NUMBER_ONLY = 0x80000000;
 //	const UInt32 FT_LIST_BY_INDEX	= 0x40000000;
 //	const UInt32 FT_LIST_ALL			= 0x20000000;
@@ -206,7 +208,8 @@ enum {
 		}
 
 	private: System::Windows::Forms::Button *  btnClose;
-	private: System::Windows::Forms::Button *  btnSend;
+	private: System::Windows::Forms::Button *  btnProgRelease;
+
 	private: System::Threading::Thread * thrdReader;
 
 
@@ -218,6 +221,16 @@ enum {
 	private: bool bContinue;
 	private: UInt32 dwOpenFlags;
 	private: ManualResetEvent * ev;
+	private: System::Windows::Forms::Button *  btnProgBeta;
+	private: System::Windows::Forms::Button *  btnProgExp;
+
+
+	private: System::Windows::Forms::Button *  btnSave;
+	private: System::Windows::Forms::Button *  btnSetTime;
+
+
+	private: System::Windows::Forms::Label *  label1;
+	private: System::Windows::Forms::Label *  label2;
 
 
 	private:
@@ -232,44 +245,149 @@ enum {
 		/// </summary>
 		void InitializeComponent(void)
 		{
-			this->btnClose = (new System::Windows::Forms::Button());
-			this->btnSend = (new System::Windows::Forms::Button());
+			this->btnClose       = (new System::Windows::Forms::Button());
+			this->btnProgRelease = (new System::Windows::Forms::Button());
+			this->btnProgBeta    = (new System::Windows::Forms::Button());
+			this->btnProgExp     = (new System::Windows::Forms::Button());
+			this->btnSave        = (new System::Windows::Forms::Button());
+			this->btnSetTime     = (new System::Windows::Forms::Button());
+			this->label1         = (new System::Windows::Forms::Label());
+			this->label2         = (new System::Windows::Forms::Label());
 			this->SuspendLayout();
 			// 
 			// btnClose
 			// 
-			this->btnClose->Location = System::Drawing::Point(12, 12);
+			this->btnClose->Location = System::Drawing::Point(511, 51);
 			this->btnClose->Name = L"btnClose";
-			this->btnClose->Size = System::Drawing::Size(115, 23);
+			this->btnClose->Size = System::Drawing::Size(115, 10);
 			this->btnClose->TabIndex = 1;
 			this->btnClose->Text = L"Upload Log";
 			this->btnClose->Click += new System::EventHandler(this, &Form1::ButtonCancel_Click);
 			// 
-			// btnSend
+			// btnProgRelease
 			// 
-			this->btnSend->Location = System::Drawing::Point(137, 12);
-			this->btnSend->Name = L"btnSend";
-			this->btnSend->Size = System::Drawing::Size(138, 23);
-			this->btnSend->TabIndex = 2;
-			this->btnSend->Text = L"Update Firmware";
-			this->btnSend->Click += new System::EventHandler(this, &Form1::btnSend_Click);
+			this->btnProgRelease->Location = System::Drawing::Point(137, 25);
+			this->btnProgRelease->Name = L"btnProgRelease";
+			this->btnProgRelease->Size = System::Drawing::Size(138, 23);
+			this->btnProgRelease->TabIndex = 2;
+			this->btnProgRelease->Text = L"Latest Release";
+			this->btnProgRelease->Click += new System::EventHandler(this, &Form1::btnProgRelease_Click);
+			// 
+			// btnProgBeta
+			// 
+			this->btnProgBeta->Location = System::Drawing::Point(137, 54);
+			this->btnProgBeta->Name = L"btnProgBeta";
+			this->btnProgBeta->Size = System::Drawing::Size(138, 23);
+			this->btnProgBeta->TabIndex = 3;
+			this->btnProgBeta->Text = L"Beta Release";
+			this->btnProgBeta->Click += new System::EventHandler(this, &Form1::btnProgBeta_Click);
+
+			// 
+			// btnProgExp
+			// 
+			this->btnProgExp->Location = System::Drawing::Point(137, 83);
+			this->btnProgExp->Name = L"btnProgExp";
+			this->btnProgExp->Size = System::Drawing::Size(138, 23);
+			this->btnProgExp->TabIndex = 4;
+			this->btnProgExp->Text = L"Experimental Release";
+			this->btnProgExp->Click += new System::EventHandler(this, &Form1::btnProgExp_Click);
+
+			// 
+			// btnSave
+			// 
+			this->btnSave->Location = System::Drawing::Point(12, 25);
+			this->btnSave->Name = L"btnSave";
+			this->btnSave->Size = System::Drawing::Size(119, 23);
+			this->btnSave->TabIndex = 5;
+			this->btnSave->Text = L"Save Data";
+			this->btnSave->Click += new System::EventHandler(this, &Form1::btnSave_Click);
+
+			// 
+			// btnSetTime
+			// 
+			this->btnSetTime->Location = System::Drawing::Point(12, 54);
+			this->btnSetTime->Name = L"btnSetTime";
+			this->btnSetTime->Size = System::Drawing::Size(119, 23);
+			this->btnSetTime->TabIndex = 6;
+			this->btnSetTime->Text = L"Set Time";
+			this->btnSetTime->Click += new System::EventHandler(this, &Form1::btnSetTime_Click);
+
+			// 
+			// label1
+			// 
+			this->label1->AutoSize = true;
+			this->label1->Location = System::Drawing::Point(137, 9);
+			this->label1->Name = L"label1";
+			this->label1->Size = System::Drawing::Size(87, 13);
+			this->label1->TabIndex = 7;
+			this->label1->Text = L"Update Firmware";
+			// 
+			// label2
+			// 
+			this->label2->AutoSize = true;
+			this->label2->Font = (new System::Drawing::Font(L"Microsoft Sans Serif", 6.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point, 
+				static_cast<System::Byte>(0)));
+			this->label2->Location = System::Drawing::Point(0, 0);
+			this->label2->Name = L"label2";
+			this->label2->Size = System::Drawing::Size(52, 12);
+			this->label2->TabIndex = 8;
+			this->label2->Text = L"Version 0.1";
 			// 
 			// Form1
 			// 
 			this->AutoScaleBaseSize = System::Drawing::Size(5, 13);
-			this->ClientSize = System::Drawing::Size(287, 48);
-			this->Controls->Add(this->btnSend);
+			this->ClientSize = System::Drawing::Size(287, 115);
+			this->Controls->Add(this->label2);
+			this->Controls->Add(this->label1);
+			this->Controls->Add(this->btnSetTime);
+			this->Controls->Add(this->btnSave);
+			this->Controls->Add(this->btnProgExp);
+			this->Controls->Add(this->btnProgBeta);
+			this->Controls->Add(this->btnProgRelease);
 			this->Controls->Add(this->btnClose);
 			this->Location = System::Drawing::Point(56, 48);
 			this->MaximizeBox = false;
-			this->MaximumSize = System::Drawing::Size(303, 86);
-			this->MinimumSize = System::Drawing::Size(303, 86);
+			this->MaximumSize = System::Drawing::Size(303, 153);
+			this->MinimumSize = System::Drawing::Size(303, 153);
 			this->Name = L"Form1";
 			this->Text = L"OnyxLoader";
 			this->Load += new System::EventHandler(this, &Form1::Form1_Load);
 			this->ResumeLayout(false);
+			this->PerformLayout();
 
 		}	
+
+	private: System::Void btnSave_Click(System::Object *  sender, System::EventArgs *  e)
+			{
+				
+            SaveFileDialog* sfd = new SaveFileDialog();
+            sfd->Filter = "CSV Files|*.csv|All Files|*.*";
+			sfd->AddExtension = true;
+
+			System::Threading::Thread::CurrentThread->ApartmentState = System::Threading::ApartmentState::STA;
+
+            if( sfd->ShowDialog() != System::Windows::Forms::DialogResult::OK )
+            {
+                return;
+            }
+
+			FileStream * fs = new FileStream(sfd->FileName,FileMode::Create);
+
+				char *data = do_get_log_csv();
+
+				for(int n=0;;n++) {
+				  fs->WriteByte(data[n]);
+				  if(data[n] == 0) break;
+				}
+				fs->Close();
+				MessageBox::Show( "Save Complete" );
+			}
+
+	private: System::Void btnSetTime_Click(System::Object *  sender, System::EventArgs *  e)
+			{
+				do_set_time();
+				MessageBox::Show( "Time Set" );
+			}
 
 	private: System::Void ButtonCancel_Click(System::Object *  sender, System::EventArgs *  e)
 			{
@@ -305,55 +423,47 @@ enum {
 			    InternetCloseHandle(hRequest);
 
 			}
-	private: System::Void OpenPort()
-			 {
-				FT_STATUS ftStatus = FT_OK;
-				ftStatus = FT_Open(0, &handle);
-			 }
+	private: System::Void OpenPort() {
+	  FT_STATUS ftStatus = FT_OK;
+	  ftStatus = FT_Open(0, &handle);
+	}
 
- 	private: System::Void ClosePort()
-			 {
-				if(handle) {
-					FT_Close(handle);
-					handle = NULL;
-				}
-			 }
-	private: System::Void btnSend_Click(System::Object *  sender, System::EventArgs *  e)
-			 {
-				
-    
-    // Download flash image from http://41j.com/safecast_latest.bin
+ 	private: System::Void ClosePort() {
+      if(handle) {
+        FT_Close(handle);
+		handle = NULL;
+	  }
+	}
 
-	HINTERNET hOpen = InternetOpen("WinSock",INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+	private: System::Void runFlash(char *szUrl) {
+	    // Download flash image from http://41j.com/safecast_latest.bin
 
+  	    HINTERNET hOpen = InternetOpen("WinSock",INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+		HANDLE hFile     = INVALID_HANDLE_VALUE;
+		HANDLE hTempFile = INVALID_HANDLE_VALUE; 
 
-    char *szUrl = "http://41j.com/safecast_latest.bin"; // URL
-    
-	HANDLE hFile     = INVALID_HANDLE_VALUE;
-    HANDLE hTempFile = INVALID_HANDLE_VALUE; 
+		BOOL fSuccess  = FALSE;
+		DWORD dwRetVal = 0;
+		UINT uRetVal   = 0;
 
-    BOOL fSuccess  = FALSE;
-    DWORD dwRetVal = 0;
-    UINT uRetVal   = 0;
+		DWORD dwBytesRead    = 0;
+		DWORD dwBytesWritten = 0; 
 
-    DWORD dwBytesRead    = 0;
-    DWORD dwBytesWritten = 0; 
-
-    char szFileName[MAX_PATH];  
-    TCHAR lpTempPathBuffer[MAX_PATH];
-    char  chBuffer[1024]; 
+		char szFileName[MAX_PATH];  
+		TCHAR lpTempPathBuffer[MAX_PATH];
+		char  chBuffer[1024]; 
 
 
-	// create temp file, the windows way
-	     //  Gets the temp path env string (no guarantee it's a valid path).
-    dwRetVal = GetTempPath(MAX_PATH,          // length of the buffer
-                           lpTempPathBuffer); // buffer for path 
+		// create temp file, the windows way
+	    //  Gets the temp path env string (no guarantee it's a valid path).
+		dwRetVal = GetTempPath(MAX_PATH,          // length of the buffer
+			                   lpTempPathBuffer); // buffer for path 
 
-    //  Generates a temporary file name. 
-    uRetVal = GetTempFileName(lpTempPathBuffer, // directory for tmp files
-                              TEXT("DEMO"),     // temp file name prefix 
-                              0,                // create unique name 
-                              szFileName);      // buffer for name
+		//  Generates a temporary file name. 
+		uRetVal = GetTempFileName(lpTempPathBuffer, // directory for tmp files
+			                      TEXT("DEMO"),     // temp file name prefix 
+			                     0,                // create unique name 
+				                  szFileName);      // buffer for name
 	
        DWORD dwSize;
        CHAR   szHead[] = "Accept: */*\r\n\r\n";
@@ -381,6 +491,7 @@ enum {
           {
               fclose (pFile);
          //    cerr << "Error !" << endl;
+			MessageBox::Show("Failed to download firmware image" );
             return ;
           }
           if (!dwSize)
@@ -404,9 +515,26 @@ enum {
     argv[2] = argv2;
     
     int result = do_flash_main(argc,argv);
+	if(result == 0) MessageBox::Show("Flash Completed Successfully" );
+	           else MessageBox::Show("Flash Programming failed");
+	}
 
+	private: System::Void btnProgRelease_Click(System::Object *  sender, System::EventArgs *  e) {
+	    char *szUrl = "http://41j.com/safecast_latest.bin"; // URL
+		runFlash(szUrl);
+	}
 
-			 }
+	private: System::Void btnProgBeta_Click(System::Object *  sender, System::EventArgs *  e) {
+		MessageBox::Show("Programming Beta Firmware: This firmware is for user testing only, and is not supported by Medcom International." );
+	    char *szUrl = "http://41j.com/safecast_beta.bin"; // URL
+		runFlash(szUrl);
+	}
+
+	private: System::Void btnProgExp_Click(System::Object *  sender, System::EventArgs *  e) {
+		MessageBox::Show("Programming Beta Firmware: This firmware is for user testing only, and is not supported by Medcom International." );
+		char *szUrl = "http://41j.com/safecast_exp.bin"; // URL
+		runFlash(szUrl);
+	}
 
 private: System::Void FillComboBox(UInt32 dwDescFlags)
 	{

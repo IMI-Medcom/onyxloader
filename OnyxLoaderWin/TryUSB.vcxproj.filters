@@ -30,6 +30,9 @@
     <ClCompile Include="stm32ld\serial_ftdi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="jsmn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="devFTDI.h">
@@ -57,6 +60,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FTD2XX.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="jsmn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
