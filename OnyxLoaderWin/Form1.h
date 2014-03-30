@@ -3,6 +3,10 @@
 #include "doflash.h"
 #include <Vcclr.h>
 #include <wininet.h>
+
+#include <msclr/marshal.h>
+using namespace msclr::interop;
+
 #pragma comment(lib, "wininet.lib")
 
 namespace TryUSB
@@ -243,6 +247,7 @@ enum {
 
 	private: System::Windows::Forms::Label ^  label1;
 	private: System::Windows::Forms::Label ^  label2;
+    private: System::Windows::Forms::Button^  btnProgLocal;
 
 
 	private:
@@ -266,6 +271,7 @@ enum {
             this->btnSetTime = (gcnew System::Windows::Forms::Button());
             this->label1 = (gcnew System::Windows::Forms::Label());
             this->label2 = (gcnew System::Windows::Forms::Label());
+            this->btnProgLocal = (gcnew System::Windows::Forms::Button());
             this->SuspendLayout();
             // 
             // btnClose
@@ -340,12 +346,22 @@ enum {
             this->label2->Name = L"label2";
             this->label2->Size = System::Drawing::Size(52, 12);
             this->label2->TabIndex = 8;
-            this->label2->Text = L"Version 0.1";
+            this->label2->Text = L"Version 0.2";
+            // 
+            // btnProgLocal
+            // 
+            this->btnProgLocal->Location = System::Drawing::Point(137, 112);
+            this->btnProgLocal->Name = L"btnProgLocal";
+            this->btnProgLocal->Size = System::Drawing::Size(138, 23);
+            this->btnProgLocal->TabIndex = 9;
+            this->btnProgLocal->Text = L"Local Firmware";
+            this->btnProgLocal->Click += gcnew System::EventHandler(this, &Form1::btnProgLocal_Click);
             // 
             // Form1
             // 
             this->AutoScaleBaseSize = System::Drawing::Size(5, 13);
-            this->ClientSize = System::Drawing::Size(287, 115);
+            this->ClientSize = System::Drawing::Size(287, 146);
+            this->Controls->Add(this->btnProgLocal);
             this->Controls->Add(this->label2);
             this->Controls->Add(this->label1);
             this->Controls->Add(this->btnSetTime);
@@ -357,8 +373,8 @@ enum {
             this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
             this->Location = System::Drawing::Point(56, 48);
             this->MaximizeBox = false;
-            this->MaximumSize = System::Drawing::Size(303, 153);
-            this->MinimumSize = System::Drawing::Size(303, 153);
+            this->MaximumSize = System::Drawing::Size(303, 184);
+            this->MinimumSize = System::Drawing::Size(303, 184);
             this->Name = L"Form1";
             this->Text = L"OnyxLoader";
             this->Load += gcnew System::EventHandler(this, &Form1::Form1_Load);
@@ -445,89 +461,108 @@ enum {
 	  }
 	}
 
-	private: System::Void runFlash(char *szUrl) {
-	    // Download flash image from http://41j.com/safecast_latest.bin
 
-  	    HINTERNET hOpen = InternetOpen("WinSock",INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-		HANDLE hFile     = INVALID_HANDLE_VALUE;
-		HANDLE hTempFile = INVALID_HANDLE_VALUE; 
+    private: System::Void runFlash(char *szUrl) {
+        // Download flash image from http://41j.com/safecast_latest.bin
 
-		BOOL fSuccess  = FALSE;
-		DWORD dwRetVal = 0;
-		UINT uRetVal   = 0;
+        HINTERNET hOpen = InternetOpen("WinSock",INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+        HANDLE hFile     = INVALID_HANDLE_VALUE;
+        HANDLE hTempFile = INVALID_HANDLE_VALUE; 
 
-		DWORD dwBytesRead    = 0;
-		DWORD dwBytesWritten = 0; 
+        BOOL fSuccess  = FALSE;
+        DWORD dwRetVal = 0;
+        UINT uRetVal   = 0;
 
-		char szFileName[MAX_PATH];  
-		TCHAR lpTempPathBuffer[MAX_PATH];
-		char  chBuffer[1024]; 
+        DWORD dwBytesRead    = 0;
+        DWORD dwBytesWritten = 0; 
+
+        char szFileName[MAX_PATH];  
+        TCHAR lpTempPathBuffer[MAX_PATH];
+        char  chBuffer[1024]; 
 
 
-		// create temp file, the windows way
-	    //  Gets the temp path env string (no guarantee it's a valid path).
-		dwRetVal = GetTempPath(MAX_PATH,          // length of the buffer
-			                   lpTempPathBuffer); // buffer for path 
+        // create temp file, the windows way
+        //  Gets the temp path env string (no guarantee it's a valid path).
+        dwRetVal = GetTempPath(MAX_PATH,          // length of the buffer
+                               lpTempPathBuffer); // buffer for path 
 
-		//  Generates a temporary file name. 
-		uRetVal = GetTempFileName(lpTempPathBuffer, // directory for tmp files
-			                      TEXT("DEMO"),     // temp file name prefix 
-			                     0,                // create unique name 
-				                  szFileName);      // buffer for name
-	
-       DWORD dwSize;
-       CHAR   szHead[] = "Accept: */*\r\n\r\n";
-       VOID * szTemp[25];
-       HINTERNET  hConnect;
-      FILE * pFile;
+        //  Generates a temporary file name. 
+        uRetVal = GetTempFileName(lpTempPathBuffer, // directory for tmp files
+                                  TEXT("DEMO"),     // temp file name prefix 
+                                  0,                // create unique name 
+                                  szFileName);      // buffer for name
 
-       if ( !(hConnect = InternetOpenUrl ( hOpen, szUrl, szHead,
+        DWORD dwSize;
+        CHAR   szHead[] = "Accept: */*\r\n\r\n";
+        VOID * szTemp[25];
+        HINTERNET  hConnect;
+        FILE * pFile;
+
+        if ( !(hConnect = InternetOpenUrl ( hOpen, szUrl, szHead,
              lstrlen (szHead), INTERNET_FLAG_DONT_CACHE, 0)))
-       {
-       //  cerr << "Error !" << endl;
-           return ;
-       }
-
-       if  ( !(pFile = fopen (szFileName, "wb" ) ) )
-      {
-        //   cerr << "Error !" << endl;
-          return ;
-      }
-       do
-       {
-          // Keep coping in 25 bytes chunks, while file has any data left.
-          // Note: bigger buffer will greatly improve performance.
-          if (!InternetReadFile (hConnect, szTemp, 50,  &dwSize) )
-          {
-              fclose (pFile);
-         //    cerr << "Error !" << endl;
-			MessageBox::Show("Failed to download firmware image" );
+        {
+            //  cerr << "Error !" << endl;
             return ;
-          }
-          if (!dwSize)
-              break;  // Condition of dwSize=0 indicate EOF. Stop.
-          else
-             fwrite(szTemp, sizeof (char), dwSize , pFile);
-       }   // do
-      while (TRUE);
-      fflush (pFile);
-      fclose (pFile);
+        }
 
+        if  ( !(pFile = fopen (szFileName, "wb" ) ) )
+        {
+            //   cerr << "Error !" << endl;
+            return ;
+        }
+        do
+        {
+            // Keep coping in 25 bytes chunks, while file has any data left.
+            // Note: bigger buffer will greatly improve performance.
+            if (!InternetReadFile (hConnect, szTemp, 50,  &dwSize) )
+            {
+                fclose (pFile);
+                //    cerr << "Error !" << endl;
+                MessageBox::Show("Failed to download firmware image" );
+                return ;
+            }
+            if (!dwSize) {
+                break;  // Condition of dwSize=0 indicate EOF. Stop.
+            }
+            else {
+                fwrite(szTemp, sizeof (char), dwSize, pFile);
+            }
+        }   // do
+        while (TRUE);
+        
+        fflush (pFile);
+        fclose (pFile);
 
-    // Flash    
-    int argc=3;
-    char *argv[3];
-    char *argv0 = szFileName;
-    char *argv1 = "-f";
-    char *argv2 = (char *) szFileName;
-    argv[0] = argv0;
-    argv[1] = argv1;
-    argv[2] = argv2;
+        runFlashLocal(szFileName);
     
-    int result = do_flash_main(argc,argv);
-	if(result == 0) MessageBox::Show("Flash Completed Successfully" );
-	           else MessageBox::Show("Flash Programming failed");
-	}
+    } // end of runFlash()
+
+
+
+    private: System::Void runFlashLocal(char* szFileName) {
+        // Flash    
+        
+        int argc=3;
+        char *argv[3];
+        
+        char *argv0 = szFileName;
+        char *argv1 = "-f";
+        char *argv2 = (char *) szFileName;
+        
+        argv[0] = argv0;
+        argv[1] = argv1;
+        argv[2] = argv2;
+    
+        int result = do_flash_main(argc,argv);
+        if (result == 0) {
+            MessageBox::Show("Flash Completed Successfully");
+        }
+        else {
+            MessageBox::Show("Flash Programming failed");
+        }
+    }
+
+
 
 	private: System::Void btnProgRelease_Click(System::Object ^  sender, System::EventArgs ^  e) {
 	    char *szUrl = "http://41j.com/safecast_latest.bin"; // URL
@@ -545,6 +580,28 @@ enum {
 		char *szUrl = "http://41j.com/safecast_exp.bin"; // URL
 		runFlash(szUrl);
 	}
+
+    private: System::Void btnProgLocal_Click(System::Object ^ sender, System::EventArgs ^  e) {
+        MessageBox::Show("Programming Local Firmware: This firmware is for user testing only, and is not supported by Medcom International.");
+        
+        char szFileName[MAX_PATH];
+
+        OpenFileDialog ^ openFileDialog1 = gcnew OpenFileDialog();
+        openFileDialog1->Filter = "Firmware Files|*.bin";
+        openFileDialog1->Title = "Select a Onyx Firmware File";
+
+        // Show the Dialog.
+        // If the user clicked OK in the dialog and
+        // a .bin file was selected, open it.
+        if (openFileDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
+            marshal_context ^ context = gcnew marshal_context();
+            const char* FileName = context->marshal_as<const char*>(openFileDialog1->FileName);
+            strcpy(szFileName, FileName);
+            MessageBox::Show("Begin flashing this firmware to device:  " + openFileDialog1->FileName);
+        }
+
+        runFlashLocal(szFileName);
+    }
 
 private: System::Void FillComboBox(UInt32 dwDescFlags)
 	{
