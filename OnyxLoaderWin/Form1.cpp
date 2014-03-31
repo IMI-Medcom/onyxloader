@@ -11,7 +11,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
                      LPTSTR    lpCmdLine,
                      int       nCmdShow)
 {
-	System::Threading::Thread::CurrentThread->ApartmentState = System::Threading::ApartmentState::STA;
-	Application::Run(gcnew Form1());
-	return 0;
+    System::Threading::Thread::CurrentThread->ApartmentState = System::Threading::ApartmentState::STA;
+    Application::EnableVisualStyles();
+    Application::Run(gcnew Form1());
+    return 0;
 }

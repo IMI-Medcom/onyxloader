@@ -211,54 +211,56 @@ enum {
             }
             //__super::Dispose(disposing);
         }
-	protected:
-		/*void Dispose(Boolean disposing)
-		{
-			StopThread();		// Close our thread
+    protected:
+        /*void Dispose(Boolean disposing)
+        {
+            StopThread();		// Close our thread
 
-			if (disposing && components)
-			{
-				components->Dispose();
-			}
-			__super::Dispose(disposing);
-		}*/
+            if (disposing && components)
+            {
+                components->Dispose();
+            }
+            __super::Dispose(disposing);
+        }*/
 
-	private: System::Windows::Forms::Button ^  btnClose;
-	private: System::Windows::Forms::Button ^  btnProgRelease;
+    private: System::Windows::Forms::Button ^  btnClose;
+    private: System::Windows::Forms::Button ^  btnProgRelease;
 
-	private: System::Threading::Thread ^ thrdReader;
-
-
-	private: bool bContinue;
-	private: UInt32 dwOpenFlags;
-	private: ManualResetEvent ^ ev;
-	private: System::Windows::Forms::Button ^  btnProgBeta;
-	private: System::Windows::Forms::Button ^  btnProgExp;
+    private: System::Threading::Thread ^ thrdReader;
 
 
-	private: System::Windows::Forms::Button ^  btnSave;
-	private: System::Windows::Forms::Button ^  btnSetTime;
+    private: bool bContinue;
+    private: UInt32 dwOpenFlags;
+    private: ManualResetEvent ^ ev;
+    private: System::Windows::Forms::Button ^  btnProgBeta;
+    private: System::Windows::Forms::Button ^  btnProgExp;
 
 
-	private: System::Windows::Forms::Label ^  label1;
-	private: System::Windows::Forms::Label ^  label2;
+    private: System::Windows::Forms::Button ^  btnSave;
+    private: System::Windows::Forms::Button ^  btnSetTime;
+
+
+    private: System::Windows::Forms::Label ^  label1;
+    private: System::Windows::Forms::Label ^  label2;
     private: System::Windows::Forms::Button^  btnProgLocal;
     private: System::Windows::Forms::Label^  StatusLabel;
+    private: System::Windows::Forms::ProgressBar^  progressBar1;
+    private: System::Windows::Forms::Button^  btnTest;
 
 
 
-	private:
-		/// <summary>
-		/// Required designer variable.
-		/// </summary>
-		System::ComponentModel::Container ^ components;
+    private:
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
+        System::ComponentModel::Container ^ components;
 
-		/// <summary>
-		/// Required method for Designer support - do not modify
-		/// the contents of this method with the code editor.
-		/// </summary>
-		void InitializeComponent(void)
-		{
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        void InitializeComponent(void)
+        {
             System::ComponentModel::ComponentResourceManager^  resources = (gcnew System::ComponentModel::ComponentResourceManager(Form1::typeid));
             this->btnClose = (gcnew System::Windows::Forms::Button());
             this->btnProgRelease = (gcnew System::Windows::Forms::Button());
@@ -270,6 +272,8 @@ enum {
             this->label2 = (gcnew System::Windows::Forms::Label());
             this->btnProgLocal = (gcnew System::Windows::Forms::Button());
             this->StatusLabel = (gcnew System::Windows::Forms::Label());
+            this->progressBar1 = (gcnew System::Windows::Forms::ProgressBar());
+            this->btnTest = (gcnew System::Windows::Forms::Button());
             this->SuspendLayout();
             // 
             // btnClose
@@ -358,7 +362,7 @@ enum {
             // StatusLabel
             // 
             this->StatusLabel->AutoSize = true;
-            this->StatusLabel->Location = System::Drawing::Point(12, 150);
+            this->StatusLabel->Location = System::Drawing::Point(12, 166);
             this->StatusLabel->MaximumSize = System::Drawing::Size(270, 0);
             this->StatusLabel->MinimumSize = System::Drawing::Size(270, 0);
             this->StatusLabel->Name = L"StatusLabel";
@@ -368,10 +372,30 @@ enum {
             this->StatusLabel->TextAlign = System::Drawing::ContentAlignment::TopCenter;
             this->StatusLabel->Click += gcnew System::EventHandler(this, &Form1::StatusLabel_Click);
             // 
+            // progressBar1
+            // 
+            this->progressBar1->Location = System::Drawing::Point(0, 145);
+            this->progressBar1->Name = L"progressBar1";
+            this->progressBar1->Size = System::Drawing::Size(287, 11);
+            this->progressBar1->Style = System::Windows::Forms::ProgressBarStyle::Marquee;
+            this->progressBar1->TabIndex = 11;
+            this->progressBar1->MarqueeAnimationSpeed = 0;
+            // 
+            // btnTest
+            // 
+            this->btnTest->Location = System::Drawing::Point(12, 112);
+            this->btnTest->Name = L"btnTest";
+            this->btnTest->Size = System::Drawing::Size(119, 23);
+            this->btnTest->TabIndex = 12;
+            this->btnTest->Text = L"Test";
+            this->btnTest->Click += gcnew System::EventHandler(this, &Form1::btnTest_Click);
+            // 
             // Form1
             // 
             this->AutoScaleBaseSize = System::Drawing::Size(5, 13);
-            this->ClientSize = System::Drawing::Size(287, 182);
+            this->ClientSize = System::Drawing::Size(287, 202);
+            this->Controls->Add(this->btnTest);
+            this->Controls->Add(this->progressBar1);
             this->Controls->Add(this->StatusLabel);
             this->Controls->Add(this->btnProgLocal);
             this->Controls->Add(this->label2);
@@ -385,8 +409,8 @@ enum {
             this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
             this->Location = System::Drawing::Point(56, 48);
             this->MaximizeBox = false;
-            this->MaximumSize = System::Drawing::Size(303, 220);
-            this->MinimumSize = System::Drawing::Size(303, 220);
+            this->MaximumSize = System::Drawing::Size(303, 240);
+            this->MinimumSize = System::Drawing::Size(303, 240);
             this->Name = L"Form1";
             this->Text = L"OnyxLoader";
             this->Load += gcnew System::EventHandler(this, &Form1::Form1_Load);
@@ -477,7 +501,7 @@ enum {
     private: System::Void runFlash(char *szUrl) {
         // Download flash image from http://41j.com/safecast_latest.bin
 
-        UpdateUserMessage("Running, Firmware Is Downloading, Do Not Disconnect");
+        UpdateUserMessage("Running, Firmware Is Downloading, Do Not Disconnect", false);
                                   
         HINTERNET hOpen = InternetOpen("WinSock",INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
         HANDLE hFile     = INVALID_HANDLE_VALUE;
@@ -547,7 +571,7 @@ enum {
         fflush (pFile);
         fclose (pFile);
 
-        UpdateUserMessage("Running, Firmware Has Downloaded, Do Not Disconnect");
+        UpdateUserMessage("Running, Firmware Has Downloaded, Do Not Disconnect", false);
 
         runFlashLocal(szFileName);
     
@@ -558,7 +582,7 @@ enum {
     private: System::Void runFlashLocal(char* szFileName) {
         // Flash    
         
-        UpdateUserMessage("Running, Firmware Is Being Flashed, Do Not Disconnect");
+        UpdateUserMessage("Running, Firmware Is Being Flashed, Do Not Disconnect", false);
 
         int argc=3;
         char *argv[3];
@@ -574,32 +598,32 @@ enum {
         int result = do_flash_main(argc,argv);
         if (result == 0) {
             MessageBox::Show("Flash Completed Successfully");
-            UpdateUserMessage("Idle, Device Is Connected");
+            UpdateUserMessage("Idle, Device Is Connected", true);
         }
         else {
             MessageBox::Show("Flash Programming failed");
-            UpdateUserMessage("Idle, Device Is Connected");
+            UpdateUserMessage("Idle, Device Is Connected", true);
         }
     }
 
 
 
-	private: System::Void btnProgRelease_Click(System::Object ^  sender, System::EventArgs ^  e) {
-	    char *szUrl = "http://41j.com/safecast_latest.bin"; // URL
-		runFlash(szUrl);
-	}
+    private: System::Void btnProgRelease_Click(System::Object ^  sender, System::EventArgs ^  e) {
+        char *szUrl = "http://41j.com/safecast_latest.bin"; // URL
+        runFlash(szUrl);
+    }
 
-	private: System::Void btnProgBeta_Click(System::Object ^  sender, System::EventArgs ^  e) {
-		MessageBox::Show("Programming Beta Firmware: This firmware is for user testing only, and is not supported by Medcom International." );
-	    char *szUrl = "http://41j.com/safecast_beta.bin"; // URL
-		runFlash(szUrl);
-	}
+    private: System::Void btnProgBeta_Click(System::Object ^  sender, System::EventArgs ^  e) {
+        MessageBox::Show("Programming Beta Firmware: This firmware is for user testing only, and is not supported by Medcom International." );
+        char *szUrl = "http://41j.com/safecast_beta.bin"; // URL
+        runFlash(szUrl);
+    }
 
-	private: System::Void btnProgExp_Click(System::Object ^  sender, System::EventArgs ^  e) {
-		MessageBox::Show("Programming Beta Firmware: This firmware is for user testing only, and is not supported by Medcom International." );
-		char *szUrl = "http://41j.com/safecast_exp.bin"; // URL
-		runFlash(szUrl);
-	}
+    private: System::Void btnProgExp_Click(System::Object ^  sender, System::EventArgs ^  e) {
+        MessageBox::Show("Programming Beta Firmware: This firmware is for user testing only, and is not supported by Medcom International." );
+        char *szUrl = "http://41j.com/safecast_exp.bin"; // URL
+        runFlash(szUrl);
+    }
 
     private: System::Void btnProgLocal_Click(System::Object ^ sender, System::EventArgs ^  e) {
         MessageBox::Show("Programming Local Firmware: This firmware is for user testing only, and is not supported by Medcom International.");
@@ -624,8 +648,24 @@ enum {
 
     }
 
-    private: System::Void UpdateUserMessage(System::String ^ message) {       
+    private: System::Void btnTest_Click(System::Object ^ sender, System::EventArgs ^  e) {
+        UpdateUserMessage("start running test", false);
+        Sleep(4000);
+        UpdateUserMessage("end running test", true);
+    }
+
+    private: System::Void UpdateUserMessage(System::String ^ message, bool end) {       
         this->StatusLabel->Text = message;
+        
+        if(!end) {
+            this->progressBar1->Style = ProgressBarStyle::Marquee;
+            this->progressBar1->MarqueeAnimationSpeed = 100;
+        }
+        else {
+            this->progressBar1->Style = ProgressBarStyle::Blocks;
+            this->progressBar1->MarqueeAnimationSpeed = 0;
+        }
+        
         //this->StatusLabel->Invalidate();
         this->Invalidate();
         this->Update();
