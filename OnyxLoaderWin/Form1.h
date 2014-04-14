@@ -1,6 +1,8 @@
 #pragma once
 
 #include "doflash.h"
+#include "gen_util.h"
+
 #include <Vcclr.h>
 #include <wininet.h>
 
@@ -154,6 +156,7 @@ enum {
 		Form1(void)
 		{
 			InitializeComponent();
+            InitializeBackgoundWorker();
 		}
 
 	private:
@@ -247,7 +250,11 @@ enum {
     private: System::Windows::Forms::ProgressBar^  progressBar1;
     private: System::Windows::Forms::Button^  btnTest;
 
+    System::ComponentModel::BackgroundWorker^ backgroundWorkerTest;
+    System::ComponentModel::BackgroundWorker^ backgroundWorkerRunFlash;
+    System::ComponentModel::BackgroundWorker^ backgroundWorkerRunFlashLocal;
 
+    private: bool IN_DEBUG_MODE;
 
     private:
         /// <summary>
@@ -416,6 +423,24 @@ enum {
             this->Load += gcnew System::EventHandler(this, &Form1::Form1_Load);
             this->ResumeLayout(false);
             this->PerformLayout();
+        
+            this->IN_DEBUG_MODE = false;
+
+        }
+
+        void InitializeBackgoundWorker()
+        {
+            this->backgroundWorkerTest = gcnew System::ComponentModel::BackgroundWorker;
+            backgroundWorkerTest->DoWork += gcnew DoWorkEventHandler(this, &Form1::backgroundWorkerTest_DoWork);
+            backgroundWorkerTest->RunWorkerCompleted += gcnew RunWorkerCompletedEventHandler(this, &Form1::backgroundWorkerTest_RunWorkerCompleted);
+
+            this->backgroundWorkerRunFlash = gcnew System::ComponentModel::BackgroundWorker;
+            backgroundWorkerRunFlash->DoWork += gcnew DoWorkEventHandler(this, &Form1::backgroundWorkerRunFlash_DoWork);
+            backgroundWorkerRunFlash->RunWorkerCompleted += gcnew RunWorkerCompletedEventHandler(this, &Form1::backgroundWorkerRunFlash_RunWorkerCompleted);
+
+            this->backgroundWorkerRunFlashLocal = gcnew System::ComponentModel::BackgroundWorker;
+            backgroundWorkerRunFlashLocal->DoWork += gcnew DoWorkEventHandler(this, &Form1::backgroundWorkerRunFlashLocal_DoWork);
+            backgroundWorkerRunFlashLocal->RunWorkerCompleted += gcnew RunWorkerCompletedEventHandler(this, &Form1::backgroundWorkerRunFlashLocal_RunWorkerCompleted);
 
         }
 
@@ -499,90 +524,127 @@ enum {
 
 
     private: System::Void runFlash(char *szUrl) {
-        // Download flash image from http://41j.com/safecast_latest.bin
-
+        // Download flash image from http://41j.com/
         UpdateUserMessage("Running, Firmware Is Downloading, Do Not Disconnect", false);
-                                  
-        HINTERNET hOpen = InternetOpen("WinSock",INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-        HANDLE hFile     = INVALID_HANDLE_VALUE;
-        HANDLE hTempFile = INVALID_HANDLE_VALUE; 
+        backgroundWorkerRunFlash->RunWorkerAsync( char_star_to_system_string(szUrl) );
+    }
+    
+    private: System::Void backgroundWorkerRunFlash_DoWork(Object^ sender, DoWorkEventArgs^ e) {
+        
+        BackgroundWorker^ worker = dynamic_cast<BackgroundWorker^>(sender);
+        System::String ^ sysUrl = e->Argument->ToString();
 
-        BOOL fSuccess  = FALSE;
-        DWORD dwRetVal = 0;
-        UINT uRetVal   = 0;
-
-        DWORD dwBytesRead    = 0;
-        DWORD dwBytesWritten = 0; 
-
-        char szFileName[MAX_PATH];  
-        TCHAR lpTempPathBuffer[MAX_PATH];
-        char  chBuffer[1024]; 
+        marshal_context ^ context = gcnew marshal_context();
+        const char* szUrl = context->marshal_as<const char*>(sysUrl);
 
 
-        // create temp file, the windows way
-        //  Gets the temp path env string (no guarantee it's a valid path).
-        dwRetVal = GetTempPath(MAX_PATH,          // length of the buffer
+        printf("url %s\n", szUrl);
+
+        OutputDebugString(_T(szUrl));
+
+        char szFileName[MAX_PATH];
+
+        if (IN_DEBUG_MODE) {
+            Sleep(4000);
+        }
+        else {
+            HINTERNET hOpen = InternetOpen("WinSock",INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+            HANDLE hFile     = INVALID_HANDLE_VALUE;
+            HANDLE hTempFile = INVALID_HANDLE_VALUE; 
+
+            BOOL fSuccess  = FALSE;
+            DWORD dwRetVal = 0;
+            UINT uRetVal   = 0;
+
+            DWORD dwBytesRead    = 0;
+            DWORD dwBytesWritten = 0; 
+
+            //char szFileName[MAX_PATH];  
+            TCHAR lpTempPathBuffer[MAX_PATH];
+            char  chBuffer[1024]; 
+
+
+            // create temp file, the windows way
+            //  Gets the temp path env string (no guarantee it's a valid path).
+            dwRetVal = GetTempPath(MAX_PATH,          // length of the buffer
                                lpTempPathBuffer); // buffer for path 
 
-        //  Generates a temporary file name. 
-        uRetVal = GetTempFileName(lpTempPathBuffer, // directory for tmp files
+            //  Generates a temporary file name. 
+            uRetVal = GetTempFileName(lpTempPathBuffer, // directory for tmp files
                                   TEXT("DEMO"),     // temp file name prefix 
                                   0,                // create unique name 
                                   szFileName);      // buffer for name
 
-        DWORD dwSize;
-        CHAR   szHead[] = "Accept: */*\r\n\r\n";
-        VOID * szTemp[25];
-        HINTERNET  hConnect;
-        FILE * pFile;
+            DWORD dwSize;
+            CHAR   szHead[] = "Accept: */*\r\n\r\n";
+            VOID * szTemp[25];
+            HINTERNET  hConnect;
+            FILE * pFile;
 
-        if ( !(hConnect = InternetOpenUrl ( hOpen, szUrl, szHead,
+            if ( !(hConnect = InternetOpenUrl ( hOpen, szUrl, szHead,
              lstrlen (szHead), INTERNET_FLAG_DONT_CACHE, 0)))
-        {
-            //  cerr << "Error !" << endl;
-            return ;
-        }
-
-        if  ( !(pFile = fopen (szFileName, "wb" ) ) )
-        {
-            //   cerr << "Error !" << endl;
-            return ;
-        }
-        do
-        {
-            // Keep coping in 25 bytes chunks, while file has any data left.
-            // Note: bigger buffer will greatly improve performance.
-            if (!InternetReadFile (hConnect, szTemp, 50,  &dwSize) )
             {
-                fclose (pFile);
-                //    cerr << "Error !" << endl;
-                MessageBox::Show("Failed to download firmware image" );
+                //  cerr << "Error !" << endl;
                 return ;
             }
-            if (!dwSize) {
-                break;  // Condition of dwSize=0 indicate EOF. Stop.
+
+            if  ( !(pFile = fopen (szFileName, "wb" ) ) )
+            {
+                //   cerr << "Error !" << endl;
+                return ;
             }
-            else {
-                fwrite(szTemp, sizeof (char), dwSize, pFile);
-            }
-        }   // do
-        while (TRUE);
+            do
+            {
+                // Keep coping in 25 bytes chunks, while file has any data left.
+                // Note: bigger buffer will greatly improve performance.
+                if (!InternetReadFile (hConnect, szTemp, 50,  &dwSize) )
+                {
+                    fclose (pFile);
+                    //    cerr << "Error !" << endl;
+                    MessageBox::Show("Failed to download firmware image" );
+                    return ;
+                }
+                if (!dwSize) {
+                    break;  // Condition of dwSize=0 indicate EOF. Stop.
+                }
+                else {
+                    fwrite(szTemp, sizeof (char), dwSize, pFile);
+                }
+            }   // do
+            while (TRUE);
         
-        fflush (pFile);
-        fclose (pFile);
+            fflush (pFile);
+            fclose (pFile);
+        }
 
-        UpdateUserMessage("Running, Firmware Has Downloaded, Do Not Disconnect", false);
+        printf("filename %s\n", szFileName);
 
-        runFlashLocal(szFileName);
-    
+        e->Result = char_star_to_system_string(szFileName);
+
     } // end of runFlash()
 
-
+    private: System::Void backgroundWorkerRunFlash_RunWorkerCompleted(Object^ sender, RunWorkerCompletedEventArgs^ e) {
+        UpdateUserMessage("Running, Firmware Has Downloaded, Do Not Disconnect", true);
+        UpdateUserMessage("Running, Firmware Is Being Flashed, Do Not Disconnect", false);
+        backgroundWorkerRunFlashLocal->RunWorkerAsync(e->Result->ToString());
+    }
 
     private: System::Void runFlashLocal(char* szFileName) {
-        // Flash    
-        
         UpdateUserMessage("Running, Firmware Is Being Flashed, Do Not Disconnect", false);
+        backgroundWorkerRunFlashLocal->RunWorkerAsync(char_star_to_system_string(szFileName));
+    }
+
+    private: System::Void backgroundWorkerRunFlashLocal_DoWork(Object^ sender, DoWorkEventArgs^ e) {
+        // Flash    
+
+        BackgroundWorker^ worker = dynamic_cast<BackgroundWorker^>(sender);
+        System::String ^ sysFileName = e->Argument->ToString();
+
+        marshal_context ^ context = gcnew marshal_context();
+        const char* cszFileName = context->marshal_as<const char*>(sysFileName);
+
+        char szFileName[MAX_PATH];
+        strcpy(szFileName, cszFileName);
 
         int argc=3;
         char *argv[3];
@@ -594,19 +656,25 @@ enum {
         argv[0] = argv0;
         argv[1] = argv1;
         argv[2] = argv2;
-    
-        int result = do_flash_main(argc,argv);
+
+        int result = 0;
+        if (IN_DEBUG_MODE) {
+            Sleep(4000);
+        }
+        else {
+            result = do_flash_main(argc,argv);
+        }
         if (result == 0) {
             MessageBox::Show("Flash Completed Successfully");
-            UpdateUserMessage("Idle, Device Is Connected", true);
         }
         else {
             MessageBox::Show("Flash Programming failed");
-            UpdateUserMessage("Idle, Device Is Connected", true);
         }
     }
 
-
+    private: System::Void backgroundWorkerRunFlashLocal_RunWorkerCompleted(Object^ sender, RunWorkerCompletedEventArgs^ e) {
+        UpdateUserMessage("Idle, Device Is Connected", true);
+    }
 
     private: System::Void btnProgRelease_Click(System::Object ^  sender, System::EventArgs ^  e) {
         char *szUrl = "http://41j.com/safecast_latest.bin"; // URL
@@ -650,24 +718,36 @@ enum {
 
     private: System::Void btnTest_Click(System::Object ^ sender, System::EventArgs ^  e) {
         UpdateUserMessage("start running test", false);
+        backgroundWorkerTest->RunWorkerAsync();
+    }
+
+    private: System::Void backgroundWorkerTest_DoWork(Object^ sender, DoWorkEventArgs^ e) {
+        // Get the BackgroundWorker that raised this event.
+        BackgroundWorker^ worker = dynamic_cast<BackgroundWorker^>(sender);
+
+        // Assign the result of the computation 
+        // to the Result property of the DoWorkEventArgs 
+        // object. This is will be available to the  
+        // RunWorkerCompleted eventhandler.
+        //e->Result = ComputeFibonacci(safe_cast<Int32>(e->Argument), worker, e);
         Sleep(4000);
+    }
+
+    private: System::Void backgroundWorkerTest_RunWorkerCompleted(Object^ /*sender*/, RunWorkerCompletedEventArgs^ e ) {
         UpdateUserMessage("end running test", true);
     }
 
     private: System::Void UpdateUserMessage(System::String ^ message, bool end) {       
         this->StatusLabel->Text = message;
-        
         if(!end) {
             this->progressBar1->Style = ProgressBarStyle::Marquee;
-            this->progressBar1->MarqueeAnimationSpeed = 100;
+            this->progressBar1->MarqueeAnimationSpeed = 30;
         }
         else {
             this->progressBar1->Style = ProgressBarStyle::Blocks;
-            this->progressBar1->MarqueeAnimationSpeed = 0;
         }
         
-        //this->StatusLabel->Invalidate();
-        this->Invalidate();
+        //this->Invalidate();
         this->Update();
     }
 

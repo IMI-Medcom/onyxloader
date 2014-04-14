@@ -62,6 +62,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>C:\Users\Owner\Documents\GitHub\onyxloader\OnyxLoaderWin\util;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <CompileAsManaged>true</CompileAsManaged>
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)$(ProjectName).exe</OutputFile>
@@ -78,6 +80,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>C:\Users\Owner\Documents\GitHub\onyxloader\OnyxLoaderWin\util;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)$(ProjectName).exe</OutputFile>
@@ -136,6 +139,7 @@
     <ClInclude Include="stm32ld\serial.h" />
     <ClInclude Include="stm32ld\stm32ld.h" />
     <ClInclude Include="stm32ld\type.h" />
+    <ClInclude Include="util\gen_util.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="app.ico" />

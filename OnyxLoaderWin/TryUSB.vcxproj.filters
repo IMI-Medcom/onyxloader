@@ -65,6 +65,9 @@
     <ClInclude Include="jsmn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="util\gen_util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="app.ico">
