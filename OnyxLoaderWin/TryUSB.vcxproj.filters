@@ -68,6 +68,9 @@
     <ClInclude Include="util\gen_util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="plot_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="app.ico">

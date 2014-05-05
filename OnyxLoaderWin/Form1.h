@@ -2,6 +2,7 @@
 
 #include "doflash.h"
 #include "gen_util.h"
+#include "plot_data.h"
 
 #include <Vcclr.h>
 #include <wininet.h>
@@ -26,6 +27,9 @@ namespace TryUSB
 	using namespace System::Globalization;
     using namespace System::IO;
     using namespace System::Text;
+
+    using namespace ZedGraph;
+
 //	const UInt32 FT_LIST_NUMBER_ONLY = 0x80000000;
 //	const UInt32 FT_LIST_BY_INDEX	= 0x40000000;
 //	const UInt32 FT_LIST_ALL			= 0x20000000;
@@ -254,12 +258,21 @@ enum {
     System::ComponentModel::BackgroundWorker^ backgroundWorkerTest;
     System::ComponentModel::BackgroundWorker^ backgroundWorkerRunFlash;
     System::ComponentModel::BackgroundWorker^ backgroundWorkerRunFlashLocal;
+    private: ZedGraph::ZedGraphControl^  zedGraphControl1;
+    private: System::Windows::Forms::Button^  btnPlot;
+    private: System::ComponentModel::IContainer^  components;
+    private: System::Windows::Forms::Button^  btnCloseGraph;
+
+    //for restoring old width and height when closing graph
+    private: int g_form_width;
+    private: int g_form_height;
+
 
     private:
         /// <summary>
         /// Required designer variable.
         /// </summary>
-        System::ComponentModel::Container ^ components;
+
 
         /// <summary>
         /// Required method for Designer support - do not modify
@@ -267,6 +280,7 @@ enum {
         /// </summary>
         void InitializeComponent(void)
         {
+            this->components = (gcnew System::ComponentModel::Container());
             System::ComponentModel::ComponentResourceManager^  resources = (gcnew System::ComponentModel::ComponentResourceManager(Form1::typeid));
             this->btnClose = (gcnew System::Windows::Forms::Button());
             this->btnProgRelease = (gcnew System::Windows::Forms::Button());
@@ -280,11 +294,14 @@ enum {
             this->StatusLabel = (gcnew System::Windows::Forms::Label());
             this->progressBar1 = (gcnew System::Windows::Forms::ProgressBar());
             this->btnTest = (gcnew System::Windows::Forms::Button());
+            this->zedGraphControl1 = (gcnew ZedGraph::ZedGraphControl());
+            this->btnPlot = (gcnew System::Windows::Forms::Button());
+            this->btnCloseGraph = (gcnew System::Windows::Forms::Button());
             this->SuspendLayout();
             // 
             // btnClose
             // 
-            this->btnClose->Location = System::Drawing::Point(511, 51);
+            this->btnClose->Location = System::Drawing::Point(1119, 12);
             this->btnClose->Name = L"btnClose";
             this->btnClose->Size = System::Drawing::Size(115, 10);
             this->btnClose->TabIndex = 1;
@@ -293,7 +310,7 @@ enum {
             // 
             // btnProgRelease
             // 
-            this->btnProgRelease->Location = System::Drawing::Point(137, 25);
+            this->btnProgRelease->Location = System::Drawing::Point(200, 25);
             this->btnProgRelease->Name = L"btnProgRelease";
             this->btnProgRelease->Size = System::Drawing::Size(138, 23);
             this->btnProgRelease->TabIndex = 2;
@@ -302,7 +319,7 @@ enum {
             // 
             // btnProgBeta
             // 
-            this->btnProgBeta->Location = System::Drawing::Point(137, 54);
+            this->btnProgBeta->Location = System::Drawing::Point(200, 54);
             this->btnProgBeta->Name = L"btnProgBeta";
             this->btnProgBeta->Size = System::Drawing::Size(138, 23);
             this->btnProgBeta->TabIndex = 3;
@@ -311,7 +328,7 @@ enum {
             // 
             // btnProgExp
             // 
-            this->btnProgExp->Location = System::Drawing::Point(137, 83);
+            this->btnProgExp->Location = System::Drawing::Point(200, 83);
             this->btnProgExp->Name = L"btnProgExp";
             this->btnProgExp->Size = System::Drawing::Size(138, 23);
             this->btnProgExp->TabIndex = 4;
@@ -329,7 +346,7 @@ enum {
             // 
             // btnSetTime
             // 
-            this->btnSetTime->Location = System::Drawing::Point(12, 54);
+            this->btnSetTime->Location = System::Drawing::Point(12, 83);
             this->btnSetTime->Name = L"btnSetTime";
             this->btnSetTime->Size = System::Drawing::Size(119, 23);
             this->btnSetTime->TabIndex = 6;
@@ -339,7 +356,7 @@ enum {
             // label1
             // 
             this->label1->AutoSize = true;
-            this->label1->Location = System::Drawing::Point(137, 9);
+            this->label1->Location = System::Drawing::Point(226, 9);
             this->label1->Name = L"label1";
             this->label1->Size = System::Drawing::Size(87, 13);
             this->label1->TabIndex = 7;
@@ -358,7 +375,7 @@ enum {
             // 
             // btnProgLocal
             // 
-            this->btnProgLocal->Location = System::Drawing::Point(137, 112);
+            this->btnProgLocal->Location = System::Drawing::Point(200, 112);
             this->btnProgLocal->Name = L"btnProgLocal";
             this->btnProgLocal->Size = System::Drawing::Size(138, 23);
             this->btnProgLocal->TabIndex = 9;
@@ -368,7 +385,7 @@ enum {
             // StatusLabel
             // 
             this->StatusLabel->AutoSize = true;
-            this->StatusLabel->Location = System::Drawing::Point(12, 166);
+            this->StatusLabel->Location = System::Drawing::Point(43, 166);
             this->StatusLabel->MaximumSize = System::Drawing::Size(270, 0);
             this->StatusLabel->MinimumSize = System::Drawing::Size(270, 0);
             this->StatusLabel->Name = L"StatusLabel";
@@ -381,11 +398,11 @@ enum {
             // progressBar1
             // 
             this->progressBar1->Location = System::Drawing::Point(0, 145);
+            this->progressBar1->MarqueeAnimationSpeed = 0;
             this->progressBar1->Name = L"progressBar1";
-            this->progressBar1->Size = System::Drawing::Size(287, 11);
+            this->progressBar1->Size = System::Drawing::Size(352, 18);
             this->progressBar1->Style = System::Windows::Forms::ProgressBarStyle::Marquee;
             this->progressBar1->TabIndex = 11;
-            this->progressBar1->MarqueeAnimationSpeed = 0;
             // 
             // btnTest
             // 
@@ -396,10 +413,45 @@ enum {
             this->btnTest->Text = L"Test";
             this->btnTest->Click += gcnew System::EventHandler(this, &Form1::btnTest_Click);
             // 
+            // zedGraphControl1
+            // 
+            this->zedGraphControl1->Location = System::Drawing::Point(12, 245);
+            this->zedGraphControl1->Name = L"zedGraphControl1";
+            this->zedGraphControl1->ScrollGrace = 0;
+            this->zedGraphControl1->ScrollMaxX = 0;
+            this->zedGraphControl1->ScrollMaxY = 0;
+            this->zedGraphControl1->ScrollMaxY2 = 0;
+            this->zedGraphControl1->ScrollMinX = 0;
+            this->zedGraphControl1->ScrollMinY = 0;
+            this->zedGraphControl1->ScrollMinY2 = 0;
+            this->zedGraphControl1->Size = System::Drawing::Size(500, 205);
+            this->zedGraphControl1->TabIndex = 13;
+            // 
+            // btnPlot
+            // 
+            this->btnPlot->Location = System::Drawing::Point(12, 54);
+            this->btnPlot->Name = L"btnPlot";
+            this->btnPlot->Size = System::Drawing::Size(119, 23);
+            this->btnPlot->TabIndex = 14;
+            this->btnPlot->Text = L"Plot Data";
+            this->btnPlot->Click += gcnew System::EventHandler(this, &Form1::btnPlot_Data);
+            // 
+            // btnCloseGraph
+            // 
+            this->btnCloseGraph->Location = System::Drawing::Point(528, 83);
+            this->btnCloseGraph->Name = L"btnCloseGraph";
+            this->btnCloseGraph->Size = System::Drawing::Size(119, 23);
+            this->btnCloseGraph->TabIndex = 15;
+            this->btnCloseGraph->Text = L"Close Graph";
+            this->btnCloseGraph->Click += gcnew System::EventHandler(this, &Form1::btnClose_Graph);
+            // 
             // Form1
             // 
             this->AutoScaleBaseSize = System::Drawing::Size(5, 13);
-            this->ClientSize = System::Drawing::Size(287, 202);
+            this->ClientSize = System::Drawing::Size(352, 182);
+            this->Controls->Add(this->btnCloseGraph);
+            this->Controls->Add(this->btnPlot);
+            this->Controls->Add(this->zedGraphControl1);
             this->Controls->Add(this->btnTest);
             this->Controls->Add(this->progressBar1);
             this->Controls->Add(this->StatusLabel);
@@ -415,13 +467,14 @@ enum {
             this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
             this->Location = System::Drawing::Point(56, 48);
             this->MaximizeBox = false;
-            this->MaximumSize = System::Drawing::Size(303, 240);
-            this->MinimumSize = System::Drawing::Size(303, 240);
+            this->MaximumSize = System::Drawing::Size(1500, 600);
+            this->MinimumSize = System::Drawing::Size(303, 220);
             this->Name = L"Form1";
             this->Text = L"OnyxLoader";
             this->Load += gcnew System::EventHandler(this, &Form1::Form1_Load);
             this->ResumeLayout(false);
             this->PerformLayout();
+
         }
 
         void InitializeBackgoundWorker()
@@ -440,31 +493,35 @@ enum {
 
         }
 
-	private: System::Void btnSave_Click(System::Object ^  sender, System::EventArgs ^  e)
-			{
-				
-            SaveFileDialog^ sfd = gcnew SaveFileDialog();
-            sfd->Filter = "CSV Files|*.csv|All Files|*.*";
-			sfd->AddExtension = true;
+    private: System::Void btnSave_Click(System::Object ^  sender, System::EventArgs ^  e) {
 
-			System::Threading::Thread::CurrentThread->ApartmentState = System::Threading::ApartmentState::STA;
+        SaveFileDialog^ sfd = gcnew SaveFileDialog();
+        sfd->Filter = "CSV Files|*.csv|All Files|*.*";
+        sfd->AddExtension = true;
 
-            if( sfd->ShowDialog() != System::Windows::Forms::DialogResult::OK )
-            {
-                return;
-            }
+        System::Threading::Thread::CurrentThread->ApartmentState = System::Threading::ApartmentState::STA;
 
-			FileStream ^ fs = gcnew FileStream(sfd->FileName,FileMode::Create);
+        if( sfd->ShowDialog() != System::Windows::Forms::DialogResult::OK ) {
+            return;
+        }
 
-				char *data = do_get_log_csv();
+        get_data_and_write_csv(sfd->FileName);
+    }
 
-				for(int n=0;;n++) {
-				  fs->WriteByte(data[n]);
-				  if(data[n] == 0) break;
-				}
-				fs->Close();
-				MessageBox::Show( "Save Complete" );
-			}
+    private: System::Void get_data_and_write_csv(String^ filename) {
+        FileStream ^ fs = gcnew FileStream(filename, FileMode::Create);
+
+        char *data = do_get_log_csv();
+
+        for(int n=0;;n++) {
+            fs->WriteByte(data[n]);
+            if(data[n] == 0) break;
+        }
+        fs->Close();
+        MessageBox::Show( "Save Complete" );
+        //always plot data that's saved
+        plot_data(filename);
+    }
 
 	private: System::Void btnSetTime_Click(System::Object ^  sender, System::EventArgs ^  e)
 			{
@@ -621,6 +678,7 @@ enum {
 
     private: System::Void backgroundWorkerRunFlash_RunWorkerCompleted(Object^ sender, RunWorkerCompletedEventArgs^ e) {
         UpdateUserMessage("Running, Firmware Has Downloaded, Do Not Disconnect", true);
+        //String^ firmware_version_to_flash = get_firmware_version_from_file( e->Result->ToString() );
         UpdateUserMessage("Running, Firmware Is Being Flashed, Do Not Disconnect", false);
         backgroundWorkerRunFlashLocal->RunWorkerAsync(e->Result->ToString());
     }
@@ -713,8 +771,66 @@ enum {
     }
 
     private: System::Void btnTest_Click(System::Object ^ sender, System::EventArgs ^  e) {
-        UpdateUserMessage("start running test", false);
-        backgroundWorkerTest->RunWorkerAsync();
+        printf("btnTest_Click\n");
+        Console::WriteLine("btnTest_Click\n");
+        //create_graph("C://Users//Owner//test//test1.png");
+        //UpdateUserMessage("start running test", false);
+        //backgroundWorkerTest->RunWorkerAsync();
+    }
+
+    private: System::Void btnPlot_Data(System::Object ^ sender, System::EventArgs ^  e) {
+        printf("btnPlot_Data\n");
+        Console::WriteLine("btnPlot_Data\n");
+        
+        char szFileName[MAX_PATH];  
+        TCHAR lpTempPathBuffer[MAX_PATH];
+        char  chBuffer[1024];
+        DWORD dwRetVal = 0;
+        UINT uRetVal = 0;
+
+        // create temp file, the windows way
+        // Gets the temp path env string (no guarantee it's a valid path).
+        dwRetVal = GetTempPath(MAX_PATH, lpTempPathBuffer); 
+
+        //  Generates a temporary file name. 
+        uRetVal = GetTempFileName(lpTempPathBuffer, // directory for tmp files
+                                  TEXT("DEMO"),     // temp file name prefix 
+                                  0,                // create unique name 
+                                  szFileName);      // buffer for name
+
+        get_data_and_write_csv(char_star_to_system_string(szFileName) );
+    }
+
+    private: System::Void btnClose_Graph(System::Object ^ sender, System::EventArgs ^  e) {
+        this->Size = System::Drawing::Size(g_form_width, g_form_height);
+    }
+
+    private: System::Void plot_data(String^ filename) {
+        create_graph(zedGraphControl1, filename);
+        SetSize();
+        this->Update();
+    }
+
+    private: System::Void SetSize() {
+        
+        //for restoring when closing graph
+        g_form_width = this->Width;
+        g_form_height = this->Height;
+
+        int graph_start_x = 10;
+        int graph_start_y = this->Height;
+
+        zedGraphControl1->Location = System::Drawing::Point(graph_start_x, graph_start_y-30);
+
+        int form_new_height = 600;
+        int form_new_width = 1000;
+
+        this->Size = System::Drawing::Size(form_new_width, form_new_height);
+
+        int border = 25;
+        // Leave a small margin around the outside of the control
+        zedGraphControl1->Size = System::Drawing::Size(form_new_width-graph_start_x-border, form_new_height-graph_start_y-border);
+
     }
 
     private: System::Void backgroundWorkerTest_DoWork(Object^ sender, DoWorkEventArgs^ e) {
@@ -745,6 +861,12 @@ enum {
         
         //this->Invalidate();
         this->Update();
+    }
+
+    private: System::String^ get_firmware_version_from_file(String^ filename_in) {
+        //TODO: get info about firmware file structure - maybe a better way to do this than searching for VERSION string
+        String^ firmware_version = "unknown";
+        return firmware_version;
     }
 
     private: System::Void FillComboBox(UInt32 dwDescFlags) {
