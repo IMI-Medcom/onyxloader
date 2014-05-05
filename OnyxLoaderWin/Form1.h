@@ -11,6 +11,8 @@ using namespace msclr::interop;
 
 #pragma comment(lib, "wininet.lib")
 
+#define IN_DEBUG_MODE 0
+
 namespace TryUSB
 {
 	using namespace System;
@@ -44,18 +46,17 @@ enum {
     FT_INSUFFICIENT_RESOURCES,
     FT_INVALID_PARAMETER,
     FT_INVALID_BAUD_RATE,
-
     FT_DEVICE_NOT_OPENED_FOR_ERASE,
     FT_DEVICE_NOT_OPENED_FOR_WRITE,
     FT_FAILED_TO_WRITE_DEVICE,
     FT_EEPROM_READ_FAILED,
     FT_EEPROM_WRITE_FAILED,
     FT_EEPROM_ERASE_FAILED,
-	FT_EEPROM_NOT_PRESENT,
-	FT_EEPROM_NOT_PROGRAMMED,
-	FT_INVALID_ARGS,
-	FT_NOT_SUPPORTED,
-	FT_OTHER_ERROR
+    FT_EEPROM_NOT_PRESENT,
+    FT_EEPROM_NOT_PROGRAMMED,
+    FT_INVALID_ARGS,
+    FT_NOT_SUPPORTED,
+    FT_OTHER_ERROR
 };
 
 	typedef void * FT_HANDLE;
@@ -254,8 +255,6 @@ enum {
     System::ComponentModel::BackgroundWorker^ backgroundWorkerRunFlash;
     System::ComponentModel::BackgroundWorker^ backgroundWorkerRunFlashLocal;
 
-    private: bool IN_DEBUG_MODE;
-
     private:
         /// <summary>
         /// Required designer variable.
@@ -423,9 +422,6 @@ enum {
             this->Load += gcnew System::EventHandler(this, &Form1::Form1_Load);
             this->ResumeLayout(false);
             this->PerformLayout();
-        
-            this->IN_DEBUG_MODE = false;
-
         }
 
         void InitializeBackgoundWorker()
