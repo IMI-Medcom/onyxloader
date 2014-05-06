@@ -258,6 +258,9 @@ enum {
     System::ComponentModel::BackgroundWorker^ backgroundWorkerTest;
     System::ComponentModel::BackgroundWorker^ backgroundWorkerRunFlash;
     System::ComponentModel::BackgroundWorker^ backgroundWorkerRunFlashLocal;
+    System::ComponentModel::BackgroundWorker^ backgroundWorkerRunSaveData;
+    System::ComponentModel::BackgroundWorker^ backgroundWorkerRunPlotData;
+
     private: ZedGraph::ZedGraphControl^  zedGraphControl1;
     private: System::Windows::Forms::Button^  btnPlot;
     private: System::ComponentModel::IContainer^  components;
@@ -310,16 +313,16 @@ enum {
             // 
             // btnProgRelease
             // 
-            this->btnProgRelease->Location = System::Drawing::Point(200, 25);
+            this->btnProgRelease->Location = System::Drawing::Point(189, 25);
             this->btnProgRelease->Name = L"btnProgRelease";
             this->btnProgRelease->Size = System::Drawing::Size(138, 23);
             this->btnProgRelease->TabIndex = 2;
             this->btnProgRelease->Text = L"Latest Release";
             this->btnProgRelease->Click += gcnew System::EventHandler(this, &Form1::btnProgRelease_Click);
             // 
-            // btnProgBeta
+            // btnProgBet
             // 
-            this->btnProgBeta->Location = System::Drawing::Point(200, 54);
+            this->btnProgBeta->Location = System::Drawing::Point(189, 54);
             this->btnProgBeta->Name = L"btnProgBeta";
             this->btnProgBeta->Size = System::Drawing::Size(138, 23);
             this->btnProgBeta->TabIndex = 3;
@@ -328,7 +331,7 @@ enum {
             // 
             // btnProgExp
             // 
-            this->btnProgExp->Location = System::Drawing::Point(200, 83);
+            this->btnProgExp->Location = System::Drawing::Point(189, 83);
             this->btnProgExp->Name = L"btnProgExp";
             this->btnProgExp->Size = System::Drawing::Size(138, 23);
             this->btnProgExp->TabIndex = 4;
@@ -337,7 +340,7 @@ enum {
             // 
             // btnSave
             // 
-            this->btnSave->Location = System::Drawing::Point(12, 25);
+            this->btnSave->Location = System::Drawing::Point(26, 25);
             this->btnSave->Name = L"btnSave";
             this->btnSave->Size = System::Drawing::Size(119, 23);
             this->btnSave->TabIndex = 5;
@@ -346,7 +349,7 @@ enum {
             // 
             // btnSetTime
             // 
-            this->btnSetTime->Location = System::Drawing::Point(12, 83);
+            this->btnSetTime->Location = System::Drawing::Point(26, 83);
             this->btnSetTime->Name = L"btnSetTime";
             this->btnSetTime->Size = System::Drawing::Size(119, 23);
             this->btnSetTime->TabIndex = 6;
@@ -356,7 +359,7 @@ enum {
             // label1
             // 
             this->label1->AutoSize = true;
-            this->label1->Location = System::Drawing::Point(226, 9);
+            this->label1->Location = System::Drawing::Point(212, 9);
             this->label1->Name = L"label1";
             this->label1->Size = System::Drawing::Size(87, 13);
             this->label1->TabIndex = 7;
@@ -371,11 +374,11 @@ enum {
             this->label2->Name = L"label2";
             this->label2->Size = System::Drawing::Size(52, 12);
             this->label2->TabIndex = 8;
-            this->label2->Text = L"Version 0.2";
+            this->label2->Text = L"Version 0.3";
             // 
             // btnProgLocal
             // 
-            this->btnProgLocal->Location = System::Drawing::Point(200, 112);
+            this->btnProgLocal->Location = System::Drawing::Point(189, 112);
             this->btnProgLocal->Name = L"btnProgLocal";
             this->btnProgLocal->Size = System::Drawing::Size(138, 23);
             this->btnProgLocal->TabIndex = 9;
@@ -406,7 +409,7 @@ enum {
             // 
             // btnTest
             // 
-            this->btnTest->Location = System::Drawing::Point(12, 112);
+            this->btnTest->Location = System::Drawing::Point(26, 112);
             this->btnTest->Name = L"btnTest";
             this->btnTest->Size = System::Drawing::Size(119, 23);
             this->btnTest->TabIndex = 12;
@@ -429,7 +432,7 @@ enum {
             // 
             // btnPlot
             // 
-            this->btnPlot->Location = System::Drawing::Point(12, 54);
+            this->btnPlot->Location = System::Drawing::Point(26, 54);
             this->btnPlot->Name = L"btnPlot";
             this->btnPlot->Size = System::Drawing::Size(119, 23);
             this->btnPlot->TabIndex = 14;
@@ -490,6 +493,14 @@ enum {
             this->backgroundWorkerRunFlashLocal = gcnew System::ComponentModel::BackgroundWorker;
             backgroundWorkerRunFlashLocal->DoWork += gcnew DoWorkEventHandler(this, &Form1::backgroundWorkerRunFlashLocal_DoWork);
             backgroundWorkerRunFlashLocal->RunWorkerCompleted += gcnew RunWorkerCompletedEventHandler(this, &Form1::backgroundWorkerRunFlashLocal_RunWorkerCompleted);
+            
+            this->backgroundWorkerRunSaveData = gcnew System::ComponentModel::BackgroundWorker;
+            backgroundWorkerRunSaveData->DoWork += gcnew DoWorkEventHandler(this, &Form1::backgroundWorkerRunSaveData_DoWork);
+            backgroundWorkerRunSaveData->RunWorkerCompleted += gcnew RunWorkerCompletedEventHandler(this, &Form1::backgroundWorkerRunSaveData_RunWorkerCompleted);
+
+            this->backgroundWorkerRunPlotData = gcnew System::ComponentModel::BackgroundWorker;
+            backgroundWorkerRunPlotData->DoWork += gcnew DoWorkEventHandler(this, &Form1::backgroundWorkerRunPlotData_DoWork);
+            backgroundWorkerRunPlotData->RunWorkerCompleted += gcnew RunWorkerCompletedEventHandler(this, &Form1::backgroundWorkerRunPlotData_RunWorkerCompleted);
 
         }
 
@@ -505,7 +516,21 @@ enum {
             return;
         }
 
-        get_data_and_write_csv(sfd->FileName);
+        UpdateUserMessage("Running, Acquiring and Plotting Data", false);
+        backgroundWorkerRunSaveData->RunWorkerAsync(sfd->FileName);
+
+        //get_data_and_write_csv(sfd->FileName);
+    }
+
+    private: System::Void backgroundWorkerRunSaveData_DoWork(Object^ sender, DoWorkEventArgs^ e) {
+        BackgroundWorker^ worker = dynamic_cast<BackgroundWorker^>(sender);
+        System::String ^ filename = e->Argument->ToString();
+        get_data_and_write_csv(filename);
+    }
+
+    private: System::Void backgroundWorkerRunSaveData_RunWorkerCompleted(Object^ sender, RunWorkerCompletedEventArgs^ e) {
+        UpdateUserMessage("Idle, Device Is Connected", true);
+        backgroundWorkerRunPlotData->RunWorkerAsync();
     }
 
     private: System::Void get_data_and_write_csv(String^ filename) {
@@ -779,9 +804,11 @@ enum {
     }
 
     private: System::Void btnPlot_Data(System::Object ^ sender, System::EventArgs ^  e) {
-        printf("btnPlot_Data\n");
-        Console::WriteLine("btnPlot_Data\n");
-        
+        UpdateUserMessage("Running, Acquiring and Plotting Data", false);
+        backgroundWorkerRunPlotData->RunWorkerAsync();
+    }
+
+    private: System::Void backgroundWorkerRunPlotData_DoWork(Object^ sender, DoWorkEventArgs^ e) {
         char szFileName[MAX_PATH];  
         TCHAR lpTempPathBuffer[MAX_PATH];
         char  chBuffer[1024];
@@ -799,6 +826,10 @@ enum {
                                   szFileName);      // buffer for name
 
         get_data_and_write_csv(char_star_to_system_string(szFileName) );
+    }
+                         
+    private: System::Void backgroundWorkerRunPlotData_RunWorkerCompleted(Object^ sender, RunWorkerCompletedEventArgs^ e) {
+        UpdateUserMessage("Idle, Device Is Connected", true);
     }
 
     private: System::Void btnClose_Graph(System::Object ^ sender, System::EventArgs ^  e) {
