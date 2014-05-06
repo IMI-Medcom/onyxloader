@@ -1,3 +1,3 @@
-OnyxLoader version 0.2
+OnyxLoader version 0.3
 
-Device driver will be automatically installed if an internet connection is present
+FTDI device driver will be automatically installed if an internet connection is present

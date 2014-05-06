@@ -320,7 +320,7 @@ enum {
             this->btnProgRelease->Text = L"Latest Release";
             this->btnProgRelease->Click += gcnew System::EventHandler(this, &Form1::btnProgRelease_Click);
             // 
-            // btnProgBet
+            // btnProgBeta
             // 
             this->btnProgBeta->Location = System::Drawing::Point(189, 54);
             this->btnProgBeta->Name = L"btnProgBeta";
@@ -451,7 +451,7 @@ enum {
             // Form1
             // 
             this->AutoScaleBaseSize = System::Drawing::Size(5, 13);
-            this->ClientSize = System::Drawing::Size(352, 182);
+            this->ClientSize = System::Drawing::Size(352, 184);
             this->Controls->Add(this->btnCloseGraph);
             this->Controls->Add(this->btnPlot);
             this->Controls->Add(this->zedGraphControl1);

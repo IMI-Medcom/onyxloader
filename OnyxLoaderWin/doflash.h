@@ -84,7 +84,7 @@ int getandcheckCBUS( FT_HANDLE ftHandle0 ) {
     Data.Cbus0 = 0x0A;
     need_write = 1;
   }
-  
+
   if( Data.Cbus2 != 0x0A ) {
     printf( "Cbus2 is %d, should be %d, updating!\n", Data.Cbus2, 0xA );
     Data.Cbus2 = 0x0A;
@@ -92,9 +92,10 @@ int getandcheckCBUS( FT_HANDLE ftHandle0 ) {
   }
 
   // check that CBUS3 is power enable
-  if( Data.Cbus3 != 0x01 ) {
+  if( Data.Cbus3 != 0x0A ) {  // was 01
     printf( "Cbus3 is %d, should be %d, updating!\n", Data.Cbus3, 0x1);
-    Data.Cbus2 = 0x0B;
+    //Data.Cbus2 = 0x0B;  // wierd, should be writing to cbus3, has no effect because current verion is alwasy default (0x01)
+    Data.Cbus3 = 0x0A;
     need_write = 1;
   }
 
@@ -106,20 +107,31 @@ int getandcheckCBUS( FT_HANDLE ftHandle0 ) {
   }
   */
 
-  if( need_write ) {
-    printf( "Updating EEPROM to correct setting for safecast.\n" );
+  if (need_write) {
+    printf("Updating EEPROM to correct setting for safecast.\n");
     ftStatus = FT_EE_Program(ftHandle0, &Data);
-    if(ftStatus != FT_OK) {
+    if (ftStatus != FT_OK) {
       printf("FT_EE_Program failed (%d)\n", ftStatus);
       FT_Close(ftHandle0);
       return 1;
     }
-    printf( "------> Now that the EEPROM is updated, unplug and replug the device.\n" );
-  } else {
-    printf( "EEPROM values are up to date, not modifying them\n" );
+    printf("------> Now that the EEPROM is updated, unplug and replug the device.\n");
   }
-  return 0;
+  else {
+    printf("EEPROM values are up to date, not modifying them\n");
+  }
 
+  printf("Updating CBUS3 for charging.\n");
+
+  ftStatus = FT_SetBitMode(ftHandle0, 0x80, 0x20); // CBUS bitbang mode
+  if (ftStatus != FT_OK) {
+    printf("Failed to set CBUS\n");
+  }
+  else {
+    printf("Set CBUS3 to LOW\n");
+  }
+
+  return 0;
 }
 
 
@@ -656,8 +668,8 @@ int do_flash_main(int argc, char **argv) {
       argval = optarg;
       baud = strtol(argval, NULL, 0);
       if( baud < 1200 || baud > 115200 ) {
-	printf( "Baud should be between 1200 and 115200; got: %d\n", baud );
-	return 0;
+        printf( "Baud should be between 1200 and 115200; got: %d\n", baud );
+        return 0;
       }
       break;
       
