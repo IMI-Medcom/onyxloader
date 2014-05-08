@@ -13,8 +13,8 @@
 #include <sys/types.h>
 
 #include "stm32ld.h"
-#include "../FTD2XX.H"
-
+//#include "../FTD2XX.H"
+#include "../CLI_FTD2XX.H"
 
 #include "type.h"
 static u32 ser_timeout = SER_INF_TIMEOUT;
@@ -209,7 +209,6 @@ int ser_read_byte( int id )
 // Write up to the specified number of bytes, return bytes actually written
 u32 ser_write( int id, const u8 *src, u32 size )
 {
-  u32 res;
   FT_STATUS	ftStatus;
   DWORD dwBytesWritten;
   

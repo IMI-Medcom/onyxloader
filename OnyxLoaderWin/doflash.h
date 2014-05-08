@@ -16,13 +16,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include "stm32ld/serial.h"
-#include <time.h>
+#include <ctime>
 
 #include <errno.h>
 #include <limits.h>
 
-#include "ftd2xx.h"
+#include "CLI_FTD2XX.h"
+//#include "FTD2XX.h"
+
 #include "jsmn.h"
+
 
 #define BL_VERSION_MAJOR  2
 #define BL_VERSION_MINOR  1
@@ -69,7 +72,7 @@ int getandcheckCBUS( FT_HANDLE ftHandle0 ) {
     return 1;
   }
 
-  /*
+  
   if( ser_dbg ) {
     printf("Cbus0 = 0x%X\n", Data.Cbus0);				// Cbus Mux control
     printf("Cbus1 = 0x%X\n", Data.Cbus1);				// Cbus Mux control
@@ -105,7 +108,6 @@ int getandcheckCBUS( FT_HANDLE ftHandle0 ) {
     Data.Cbus1 = 0x0A;
     need_write = 1;
   }
-  */
 
   if (need_write) {
     printf("Updating EEPROM to correct setting for safecast.\n");
@@ -139,11 +141,9 @@ int openSerialPorts8N1(int baud) {
     char * 	pcBufRead = NULL;
     char * 	pcBufLD[MAX_DEVICES + 1];
     DWORD	dwRxSize = 0;
-    DWORD 	dwBytesWritten, dwBytesRead;
     FT_STATUS	ftStatus;
     int	iNumDevs = 0;
-    int	i, j;
-    int	iDevicesOpen;
+    int i;
     unsigned char ucMode = 0x00;
     
     printf( "warning: opening up to %d ports and assuming all are Safecast devices.\n", MAX_DEVICES );
@@ -179,12 +179,11 @@ int openSerialPorts8N1(int baud) {
         
         printf("Opened device %s\n", cBufLD[i]);
         
-       // if(getandcheckCBUS(ftHandle[i]) ) {
-       //     printf( "getandcheckCBUS failed, exiting.\n" );
-       //     return -1;
-       // }
+        if(getandcheckCBUS(ftHandle[i]) ) {
+          printf( "getandcheckCBUS failed, exiting.\n" );
+          return -1;
+        }
         
-        iDevicesOpen++;
         if((ftStatus = FT_SetBaudRate(ftHandle[i], baud)) != FT_OK) {
             fprintf(stderr,"Error FT_SetBaudRate(%d), cBufLD[i] = %s\n", ftStatus, cBufLD[i]);
             break;
@@ -199,12 +198,12 @@ int openSerialPorts8N1(int baud) {
         
     }
     
-    iDevicesOpen = i;
     foundDevices = i; // record this in a global
     
-    if(pcBufRead)
+    if(pcBufRead) {
         free(pcBufRead);
-    
+    }
+
     return 0; // we always use the 0th device for now
 }
 
@@ -212,11 +211,9 @@ int openSerialPorts(int baud) {
   char * 	pcBufRead = NULL;
   char * 	pcBufLD[MAX_DEVICES + 1];
   DWORD	dwRxSize = 0;
-  DWORD 	dwBytesWritten, dwBytesRead;
   FT_STATUS	ftStatus;
   int	iNumDevs = 0;
-  int	i, j;
-  int	iDevicesOpen;	
+  int i;
   unsigned char ucMode = 0x00;
 
   printf( "warning: opening up to %d ports and assuming all are Safecast devices.\n", MAX_DEVICES );
@@ -242,9 +239,9 @@ int openSerialPorts(int baud) {
     /* Setup */
     if((ftStatus = FT_OpenEx(cBufLD[i], FT_OPEN_BY_SERIAL_NUMBER, &ftHandle[i])) != FT_OK){
       /* 
-	 This can fail if the ftdi_sio driver is loaded
-	 use lsmod to check this and rmmod ftdi_sio to remove
-	 also rmmod usbserial
+        This can fail if the ftdi_sio driver is loaded
+        use lsmod to check this and rmmod ftdi_sio to remove
+        also rmmod usbserial
       */
       fprintf(stderr,"Error FT_OpenEx(%d), device\n", ftStatus, i);
       return -1;
@@ -252,12 +249,11 @@ int openSerialPorts(int baud) {
     
     printf("Opened device %s\n", cBufLD[i]);
     
-    //if(getandcheckCBUS(ftHandle[i]) ) {
-    //  printf( "getandcheckCBUS failed, exiting.\n" );
-    //  return -1;
-    //}
+    if(getandcheckCBUS(ftHandle[i]) ) {
+      printf( "getandcheckCBUS failed, exiting.\n" );
+      return -1;
+    }
     
-    iDevicesOpen++;
     if((ftStatus = FT_SetBaudRate(ftHandle[i], baud)) != FT_OK) {
       fprintf(stderr,"Error FT_SetBaudRate(%d), cBufLD[i] = %s\n", ftStatus, cBufLD[i]);
       break;
@@ -272,7 +268,6 @@ int openSerialPorts(int baud) {
 
   }
   
-  iDevicesOpen = i;
   foundDevices = i; // record this in a global
 
   if(pcBufRead)
@@ -377,7 +372,7 @@ static u32 writeh_read_data_page4( u8 *dst, u32 len )
 static void writeh_progress( u32 wrote )
 {
   unsigned pwrite = ( wrote * 100 ) / fpsize;
-  static int expected_next = 10;
+  static unsigned int expected_next = 10;
 
   if( pwrite >= expected_next )
   {
@@ -516,7 +511,7 @@ char *do_get_log_csv() {
 
 void do_set_time() {
 
-  uint32_t t = time(NULL);
+  uint32_t t = static_cast<uint32_t>( time(NULL) );
 
   int id = openSerialPorts8N1(115200);
   ser_write(id,(const u8 *) "SETRTC\n",7);
@@ -644,7 +639,6 @@ int do_flash_main(int argc, char **argv) {
   int aflag = 0;
   char *argval = NULL;
   char infile_name[256];
-  int index;
   int c;
   int baud = 115200;
   u8 minor, major;

@@ -144,7 +144,6 @@ int stm32_get_version( u8 *major, u8 *minor )
 // Get chip ID
 int stm32_get_chip_id( u16 *version )
 {
-  u8 temp;
   int vh, vl;
 
   STM32_CHECK_INIT;
@@ -172,8 +171,6 @@ int stm32_write_unprotect()
 // Erase flash
 int stm32_erase_flash()
 {
-  u8 temp;
-
   STM32_CHECK_INIT;
   stm32h_send_command( STM32_CMD_ERASE_FLASH );
   STM32_EXPECT( STM32_COMM_ACK );
@@ -198,7 +195,7 @@ int stm32_erase_flash_page(u32 page_number,int page_count) {
   // Write list of pages to erase
   int n=0;
   for(n=0;n<page_count;n++) {
-    ser_write_byte( stm32_ser_id, (n+page_number) );
+    ser_write_byte( stm32_ser_id, static_cast<u8>(n+page_number) );
     checksum ^= (n+page_number);
   //  ser_write_byte( stm32_ser_id, (n+page_number) >> 8   );
   //  ser_write_byte( stm32_ser_id, (n+page_number) & 0xFF );
@@ -303,7 +300,7 @@ int stm32_write_flash( p_read_data read_data_func, p_progress progress_func )
 int stm32_read_flash( u32 offset, u32 datalen )
 {
   u32 wrote = 0;
-  u8 data[ STM32_WRITE_BUFSIZE + 1 ];
+  //u8 data[ STM32_WRITE_BUFSIZE + 1 ];
   u32 address = STM32_FLASH_START_ADDRESS + offset;
   int i;
 

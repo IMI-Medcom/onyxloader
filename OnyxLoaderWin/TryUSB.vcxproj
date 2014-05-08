@@ -74,7 +74,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -130,7 +130,7 @@
     <ClCompile Include="stm32ld\stm32ld.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="devFTDI.h" />
+    <ClInclude Include="CLI_FTD2XX.h" />
     <ClInclude Include="doflash.h" />
     <ClInclude Include="Form1.h">
       <FileType>CppForm</FileType>
