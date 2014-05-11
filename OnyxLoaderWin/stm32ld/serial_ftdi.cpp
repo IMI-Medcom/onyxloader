@@ -1,6 +1,6 @@
 // Serial inteface implementation for POSIX-compliant systems
 
-#include "stdafx.h"
+//#include "stdafx.h"
 #include "serial.h"
 #include <stdio.h>
 #include <string.h>

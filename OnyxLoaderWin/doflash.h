@@ -476,7 +476,7 @@ char *do_get_log_csv() {
             
               char *s = (char *) malloc(tokens[n].end-tokens[n].start+5);
               strncpy(s,alldata+tokens[n].start,tokens[n].end-tokens[n].start);
-			  s[tokens[n].end-tokens[n].start]=0;
+              s[tokens[n].end-tokens[n].start]=0;
 
               if(strcmp(s,"time") == 0) {
                 strncpy(outdatal,alldata+tokens[n+1].start,tokens[n+1].end-tokens[n+1].start);
@@ -491,10 +491,10 @@ char *do_get_log_csv() {
                 outdatal+=(tokens[n+1].end-tokens[n+1].start);
                 outdatal[0]='\r';
                 outdatal[1]='\n';
-				outdatal[2]=0;
+                outdatal[2]=0;
                 outdatal++;
                 outdatal++;
-			  }
+              }
 
             }
           
@@ -508,6 +508,45 @@ char *do_get_log_csv() {
 
     return outdata;
 }
+
+char* do_get_version() {
+    // open serial ports
+    int id = openSerialPorts8N1(115200);
+
+    ser_write(id, (const u8 *) "\r\n\r\n", 4);
+    Sleep(500);
+    ser_set_timeout_ms(id, SER_NO_TIMEOUT);
+    while (ser_read_byte(id) != -1);
+    ser_set_timeout_ms(id, STM32_COMM_TIMEOUT);
+
+    printf("device id: %d\n", id);
+
+    // Send LOGXFER
+    //ser_write(id, (const u8 *) "VERSION\n", 8);
+    ser_write(id, (const u8 *) "GUID\n", 8);
+    char *version = read_to_prompt(id);
+
+    // close serial ports
+    closeSerialPorts();
+
+    return version;
+}
+
+bool is_connected() {
+    // open serial ports
+    int id = openSerialPorts8N1(115200);
+
+    closeSerialPorts();
+
+    if(id < 0) {
+        return false;
+    }
+    else {
+        return true;
+    }
+
+}
+
 
 void do_set_time() {
 

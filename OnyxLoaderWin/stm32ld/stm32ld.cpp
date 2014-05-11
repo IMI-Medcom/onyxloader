@@ -1,6 +1,6 @@
 // STM32 bootloader client
 
-#include <stdafx.h>
+//#include "../stdafx.h"
 #include <stdio.h>
 #include "serial.h"
 #include "type.h"

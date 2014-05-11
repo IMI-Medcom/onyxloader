@@ -17,15 +17,15 @@ using namespace msclr::interop;
 
 namespace TryUSB
 {
-	using namespace System;
-	using namespace System::ComponentModel;
-	using namespace System::Collections;
-	using namespace System::Windows::Forms;
-	using namespace System::Data;
-	using namespace System::Drawing;
-	using namespace System::Threading;
-	using namespace System::Text;
-	using namespace System::Globalization;
+    using namespace System;
+    using namespace System::ComponentModel;
+    using namespace System::Collections;
+    using namespace System::Windows::Forms;
+    using namespace System::Data;
+    using namespace System::Drawing;
+    using namespace System::Threading;
+    using namespace System::Text;
+    using namespace System::Globalization;
     using namespace System::IO;
     using namespace System::Text;
 
@@ -37,25 +37,26 @@ namespace TryUSB
     [System::Runtime::InteropServices::DllImport("Kernel32.dll")] BOOL SetEvent(HANDLE hEvent);
     // missed out the W32 stuff as well
 
-	FT_HANDLE handle;
-	HANDLE hEvent;
-	/// <summary> 
-	/// Summary for Form1
-	///
-	/// WARNING: If you change the name of this class, you will need to change the 
-	///          'Resource File Name' property for the managed resource compiler tool 
-	///          associated with all .resx files this class depends on.  Otherwise,
-	///          the designers will not be able to interact properly with localized
-	///          resources associated with this form.
-	/// </summary>
+    FT_HANDLE handle;
+    HANDLE hEvent;
+    /// <summary> 
+    /// Summary for Form1
+    ///
+    /// WARNING: If you change the name of this class, you will need to change the 
+    ///          'Resource File Name' property for the managed resource compiler tool 
+    ///          associated with all .resx files this class depends on.  Otherwise,
+    ///          the designers will not be able to interact properly with localized
+    ///          resources associated with this form.
+    /// </summary>
     public ref class Form1 : public System::Windows::Forms::Form
-	{	
-	public:
-		Form1(void)
-		{
-			InitializeComponent();
+    {
+    public:
+        Form1(void)
+        {
+            InitializeComponent();
             InitializeBackgoundWorker();
-		}
+            UpdateUserMessage(get_connection_status_string(), true);
+        }
 
 	private:
 		void ReadingProc()
@@ -143,6 +144,7 @@ namespace TryUSB
 
     private: System::Windows::Forms::Label ^  label1;
     private: System::Windows::Forms::Label ^  label2;
+    private: System::Windows::Forms::Label ^  label3;
     private: System::Windows::Forms::Button^  btnProgLocal;
     private: System::Windows::Forms::Label^  StatusLabel;
     private: System::Windows::Forms::ProgressBar^  progressBar1;
@@ -193,6 +195,7 @@ namespace TryUSB
             this->zedGraphControl1 = (gcnew ZedGraph::ZedGraphControl());
             this->btnPlot = (gcnew System::Windows::Forms::Button());
             this->btnCloseGraph = (gcnew System::Windows::Forms::Button());
+            this->label3 = (gcnew System::Windows::Forms::Label());
             this->SuspendLayout();
             // 
             // btnClose
@@ -206,53 +209,68 @@ namespace TryUSB
             // 
             // btnProgRelease
             // 
+            this->btnProgRelease->BackColor = System::Drawing::Color::White;
+            this->btnProgRelease->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
             this->btnProgRelease->Location = System::Drawing::Point(189, 25);
             this->btnProgRelease->Name = L"btnProgRelease";
             this->btnProgRelease->Size = System::Drawing::Size(138, 23);
             this->btnProgRelease->TabIndex = 2;
             this->btnProgRelease->Text = L"Latest Release";
+            this->btnProgRelease->UseVisualStyleBackColor = false;
             this->btnProgRelease->Click += gcnew System::EventHandler(this, &Form1::btnProgRelease_Click);
             // 
             // btnProgBeta
             // 
+            this->btnProgBeta->BackColor = System::Drawing::Color::White;
+            this->btnProgBeta->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
             this->btnProgBeta->Location = System::Drawing::Point(189, 54);
             this->btnProgBeta->Name = L"btnProgBeta";
             this->btnProgBeta->Size = System::Drawing::Size(138, 23);
             this->btnProgBeta->TabIndex = 3;
             this->btnProgBeta->Text = L"Beta Release";
+            this->btnProgBeta->UseVisualStyleBackColor = false;
             this->btnProgBeta->Click += gcnew System::EventHandler(this, &Form1::btnProgBeta_Click);
             // 
             // btnProgExp
             // 
+            this->btnProgExp->BackColor = System::Drawing::Color::White;
+            this->btnProgExp->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
             this->btnProgExp->Location = System::Drawing::Point(189, 83);
             this->btnProgExp->Name = L"btnProgExp";
             this->btnProgExp->Size = System::Drawing::Size(138, 23);
             this->btnProgExp->TabIndex = 4;
             this->btnProgExp->Text = L"Experimental Release";
+            this->btnProgExp->UseVisualStyleBackColor = false;
             this->btnProgExp->Click += gcnew System::EventHandler(this, &Form1::btnProgExp_Click);
             // 
             // btnSave
             // 
+            this->btnSave->BackColor = System::Drawing::Color::White;
+            this->btnSave->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
             this->btnSave->Location = System::Drawing::Point(26, 25);
             this->btnSave->Name = L"btnSave";
-            this->btnSave->Size = System::Drawing::Size(119, 23);
+            this->btnSave->Size = System::Drawing::Size(138, 23);
             this->btnSave->TabIndex = 5;
             this->btnSave->Text = L"Save Data";
+            this->btnSave->UseVisualStyleBackColor = false;
             this->btnSave->Click += gcnew System::EventHandler(this, &Form1::btnSave_Click);
             // 
             // btnSetTime
             // 
+            this->btnSetTime->BackColor = System::Drawing::Color::White;
+            this->btnSetTime->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
             this->btnSetTime->Location = System::Drawing::Point(26, 83);
             this->btnSetTime->Name = L"btnSetTime";
-            this->btnSetTime->Size = System::Drawing::Size(119, 23);
+            this->btnSetTime->Size = System::Drawing::Size(138, 23);
             this->btnSetTime->TabIndex = 6;
             this->btnSetTime->Text = L"Set Time";
+            this->btnSetTime->UseVisualStyleBackColor = false;
             this->btnSetTime->Click += gcnew System::EventHandler(this, &Form1::btnSetTime_Click);
             // 
             // label1
             // 
             this->label1->AutoSize = true;
-            this->label1->Location = System::Drawing::Point(212, 9);
+            this->label1->Location = System::Drawing::Point(211, 8);
             this->label1->Name = L"label1";
             this->label1->Size = System::Drawing::Size(87, 13);
             this->label1->TabIndex = 7;
@@ -267,15 +285,18 @@ namespace TryUSB
             this->label2->Name = L"label2";
             this->label2->Size = System::Drawing::Size(52, 12);
             this->label2->TabIndex = 8;
-            this->label2->Text = L"Version 0.3";
+            this->label2->Text = L"Version 0.5";
             // 
             // btnProgLocal
             // 
+            this->btnProgLocal->BackColor = System::Drawing::Color::White;
+            this->btnProgLocal->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
             this->btnProgLocal->Location = System::Drawing::Point(189, 112);
             this->btnProgLocal->Name = L"btnProgLocal";
             this->btnProgLocal->Size = System::Drawing::Size(138, 23);
             this->btnProgLocal->TabIndex = 9;
             this->btnProgLocal->Text = L"Local Firmware";
+            this->btnProgLocal->UseVisualStyleBackColor = false;
             this->btnProgLocal->Click += gcnew System::EventHandler(this, &Form1::btnProgLocal_Click);
             // 
             // StatusLabel
@@ -302,11 +323,14 @@ namespace TryUSB
             // 
             // btnTest
             // 
+            this->btnTest->BackColor = System::Drawing::Color::White;
+            this->btnTest->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
             this->btnTest->Location = System::Drawing::Point(26, 112);
             this->btnTest->Name = L"btnTest";
-            this->btnTest->Size = System::Drawing::Size(119, 23);
+            this->btnTest->Size = System::Drawing::Size(138, 23);
             this->btnTest->TabIndex = 12;
             this->btnTest->Text = L"Test";
+            this->btnTest->UseVisualStyleBackColor = false;
             this->btnTest->Click += gcnew System::EventHandler(this, &Form1::btnTest_Click);
             // 
             // zedGraphControl1
@@ -325,26 +349,43 @@ namespace TryUSB
             // 
             // btnPlot
             // 
+            this->btnPlot->BackColor = System::Drawing::Color::White;
+            this->btnPlot->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
             this->btnPlot->Location = System::Drawing::Point(26, 54);
             this->btnPlot->Name = L"btnPlot";
-            this->btnPlot->Size = System::Drawing::Size(119, 23);
+            this->btnPlot->Size = System::Drawing::Size(138, 23);
             this->btnPlot->TabIndex = 14;
             this->btnPlot->Text = L"Plot Data";
+            this->btnPlot->UseVisualStyleBackColor = false;
             this->btnPlot->Click += gcnew System::EventHandler(this, &Form1::btnPlot_Data);
             // 
             // btnCloseGraph
             // 
+            this->btnCloseGraph->BackColor = System::Drawing::Color::White;
+            this->btnCloseGraph->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
             this->btnCloseGraph->Location = System::Drawing::Point(528, 83);
             this->btnCloseGraph->Name = L"btnCloseGraph";
             this->btnCloseGraph->Size = System::Drawing::Size(119, 23);
             this->btnCloseGraph->TabIndex = 15;
             this->btnCloseGraph->Text = L"Close Graph";
+            this->btnCloseGraph->UseVisualStyleBackColor = false;
             this->btnCloseGraph->Click += gcnew System::EventHandler(this, &Form1::btnClose_Graph);
+            // 
+            // label3
+            // 
+            this->label3->AutoSize = true;
+            this->label3->Location = System::Drawing::Point(77, 8);
+            this->label3->Name = L"label3";
+            this->label3->Size = System::Drawing::Size(29, 13);
+            this->label3->TabIndex = 16;
+            this->label3->Text = L"Misc";
             // 
             // Form1
             // 
             this->AutoScaleBaseSize = System::Drawing::Size(5, 13);
-            this->ClientSize = System::Drawing::Size(352, 184);
+            this->BackColor = System::Drawing::Color::Azure;
+            this->ClientSize = System::Drawing::Size(352, 193);
+            this->Controls->Add(this->label3);
             this->Controls->Add(this->btnCloseGraph);
             this->Controls->Add(this->btnPlot);
             this->Controls->Add(this->zedGraphControl1);
@@ -601,6 +642,9 @@ namespace TryUSB
 
     private: System::Void runFlashLocal(char* szFileName) {
         UpdateUserMessage("Running, Firmware Is Being Flashed, Do Not Disconnect", false);
+        char* firmware_version = get_firmware_version_from_file(szFileName);
+        System::String^ s_firmware_version = char_star_to_system_string(firmware_version);
+        UpdateUserMessage("Running, Firmware Being Flashed Is Version " + s_firmware_version, false);
         backgroundWorkerRunFlashLocal->RunWorkerAsync(char_star_to_system_string(szFileName));
     }
 
@@ -643,7 +687,7 @@ namespace TryUSB
     }
 
     private: System::Void backgroundWorkerRunFlashLocal_RunWorkerCompleted(Object^ sender, RunWorkerCompletedEventArgs^ e) {
-        UpdateUserMessage("Idle, Device Is Connected", true);
+        UpdateUserMessage("Idle, " + get_connection_status_string(), true);
     }
 
     private: System::Void btnProgRelease_Click(System::Object ^  sender, System::EventArgs ^  e) {
@@ -762,11 +806,16 @@ namespace TryUSB
         // object. This is will be available to the  
         // RunWorkerCompleted eventhandler.
         //e->Result = ComputeFibonacci(safe_cast<Int32>(e->Argument), worker, e);
-        Sleep(4000);
+        
+
+        //Sleep(4000);
     }
 
     private: System::Void backgroundWorkerTest_RunWorkerCompleted(Object^ /*sender*/, RunWorkerCompletedEventArgs^ e ) {
-        UpdateUserMessage("end running test", true);
+        //char* char_version = do_get_version();
+        //System::String^ version = char_star_to_system_string(char_version);
+        //UpdateUserMessage(version, true);
+        UpdateUserMessage(get_connection_status_string(), true);
     }
 
     private: System::Void UpdateUserMessage(System::String ^ message, bool end) {       
@@ -783,11 +832,15 @@ namespace TryUSB
         this->Update();
     }
 
-    private: System::String^ get_firmware_version_from_file(String^ filename_in) {
-        //TODO: get info about firmware file structure - maybe a better way to do this than searching for VERSION string
-        String^ firmware_version = "unknown";
-        return firmware_version;
+    private: System::String^ get_connection_status_string() {
+        bool device_is_connected = is_connected();
+        System::String^ status = "no device found";
+        if (device_is_connected) {
+            status = "device found and connected";
+        }
+        return status;
     }
+
 
     private: System::Void FillComboBox(UInt32 dwDescFlags) {
     
