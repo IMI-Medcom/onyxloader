@@ -1,6 +1,6 @@
 # set the name of the installer
 Name "Onyx Firmware Loader"
-!define VERSION_NAME "v0_4"
+!define VERSION_NAME "v0_5"
 
 
 Outfile "Onyx_firmware_loader_${VERSION_NAME}.exe"

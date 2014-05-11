@@ -58,54 +58,52 @@ namespace TryUSB
             UpdateUserMessage(get_connection_status_string(), true);
         }
 
-	private:
-		void ReadingProc()
-        {
-			ArrayList ^ palReadData;
-			palReadData = gcnew ArrayList();
-			TimeSpan waitTime = TimeSpan(0, 0, 1);	// 1 second timeout
-			static char c = 0;
-			char* pstr6 = &c;
-			FT_STATUS status;
+    private:
+        void ReadingProc() {
+            ArrayList ^ palReadData;
+            palReadData = gcnew ArrayList();
+            TimeSpan waitTime = TimeSpan(0, 0, 1);  // 1 second timeout
+            static char c = 0;
+            char* pstr6 = &c;
+            FT_STATUS status;
 
-			while(bContinue) {
-				DWORD dwRead, dwRXBytes;
-				Byte b;
-				NumberFormatInfo^   provider = gcnew NumberFormatInfo( );
+            while(bContinue) {
+                DWORD dwRead, dwRXBytes;
+                Byte b;
+                NumberFormatInfo^   provider = gcnew NumberFormatInfo( );
 
-				WaitForSingleObject(hEvent, -1);
-				if(handle) {
-					status = FT_GetQueueStatus(handle, &dwRead);
-					if(status != FT_OK) {
-						MessageBox::Show("GError");
-						continue;
-					}
-					while(dwRead && bContinue) {
-						status = FT_Read(handle, &b, 1, &dwRXBytes);
-						if(status != FT_OK) {
-							MessageBox::Show("RError");
-							continue;
-						}
-						else {
-					//		String* s;
-					//		s = Convert::ToString(b);
-					//		listBox1->Items->Add(s);
-						}
-						status = FT_GetQueueStatus(handle, &dwRead);
-					}
-				}
-				Thread::Sleep(0);
-			}
-			if(handle) {
-				FT_Close(handle);
-			}
+                WaitForSingleObject(hEvent, -1);
+                if(handle) {
+                    status = FT_GetQueueStatus(handle, &dwRead);
+                    if(status != FT_OK) {
+                        MessageBox::Show("GError");
+                        continue;
+                    }
+                    while(dwRead && bContinue) {
+                        status = FT_Read(handle, &b, 1, &dwRXBytes);
+                        if(status != FT_OK) {
+                            MessageBox::Show("RError");
+                            continue;
+                        }
+                        else {
+                            //String* s;
+                            //s = Convert::ToString(b);
+                            //listBox1->Items->Add(s);
+                        }
+                        status = FT_GetQueueStatus(handle, &dwRead);
+                    }
+                }
+                Thread::Sleep(0);
+            }
+            if(handle) {
+                FT_Close(handle);
+            }
         }
 
         ~Form1(){
-            StopThread();		// Close our thread
+            StopThread();   // Close our thread
             
             //RS - using CLI "Dispose" apparently maps to destructor
-
             bool disposing = true;
             if (disposing && components)
             {
@@ -165,6 +163,7 @@ namespace TryUSB
     private: int g_form_width;
     private: int g_form_height;
 
+    private: System::String^ m_cur_version_string;
 
     private:
         /// <summary>
@@ -329,7 +328,7 @@ namespace TryUSB
             this->btnTest->Name = L"btnTest";
             this->btnTest->Size = System::Drawing::Size(138, 23);
             this->btnTest->TabIndex = 12;
-            this->btnTest->Text = L"Test";
+            this->btnTest->Text = L"Check Connection";
             this->btnTest->UseVisualStyleBackColor = false;
             this->btnTest->Click += gcnew System::EventHandler(this, &Form1::btnTest_Click);
             // 
@@ -452,8 +451,6 @@ namespace TryUSB
 
         UpdateUserMessage("Running, Acquiring and Plotting Data", false);
         backgroundWorkerRunSaveData->RunWorkerAsync(sfd->FileName);
-
-        //get_data_and_write_csv(sfd->FileName);
     }
 
     private: System::Void backgroundWorkerRunSaveData_DoWork(Object^ sender, DoWorkEventArgs^ e) {
@@ -482,58 +479,56 @@ namespace TryUSB
         plot_data(filename);
     }
 
-	private: System::Void btnSetTime_Click(System::Object ^  sender, System::EventArgs ^  e)
-			{
-				do_set_time();
-				MessageBox::Show( "Time Set" );
-			}
+    private: System::Void btnSetTime_Click(System::Object ^  sender, System::EventArgs ^  e) {
+        do_set_time();
+        MessageBox::Show( "Time Set" );
+    }
 
-	private: System::Void ButtonCancel_Click(System::Object ^  sender, System::EventArgs ^  e)
-			{
-				printf("Sending log\n");
+    private: System::Void ButtonCancel_Click(System::Object ^  sender, System::EventArgs ^  e) {
+        printf("Sending log\n");
 
-				char *data = do_get_log();
-				char *boundary = "0xKhTmLbOuNdArY";
+        char *data = do_get_log();
+        char *boundary = "0xKhTmLbOuNdArY";
 
-				char *buffer = (char*) malloc (sizeof(char)*strlen(data) + 2048);
-				char *hdrs   = (char*) malloc(2048);
+        char *buffer = (char*) malloc (sizeof(char)*strlen(data) + 2048);
+        char *hdrs   = (char*) malloc(2048);
 
-			    //print header
-			    sprintf(hdrs,"Content-Type: multipart/form-data; boundary=%s\r\n",boundary);
-				sprintf(buffer,"--%s\r\n",boundary);
-			    sprintf(buffer+strlen(buffer),"Content-Disposition: form-data; name=\"uploadedfile\"; filename=\"sc2\"\r\n");
-				sprintf(buffer+strlen(buffer),"Content-Type: application/octet-stream\r\n\r\n");
+        //print header
+        sprintf(hdrs,"Content-Type: multipart/form-data; boundary=%s\r\n",boundary);
+        sprintf(buffer,"--%s\r\n",boundary);
+        sprintf(buffer+strlen(buffer),"Content-Disposition: form-data; name=\"uploadedfile\"; filename=\"sc2\"\r\n");
+        sprintf(buffer+strlen(buffer),"Content-Type: application/octet-stream\r\n\r\n");
 
-			    sprintf(buffer+strlen(buffer),"%s\r\n",data);
-			    sprintf(buffer+strlen(buffer),"--%s--\r\n",boundary);
+        sprintf(buffer+strlen(buffer),"%s\r\n",data);
+        sprintf(buffer+strlen(buffer),"--%s--\r\n",boundary);
 
 
-				HINTERNET hSession = InternetOpen("WinSock",INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+        HINTERNET hSession = InternetOpen("WinSock",INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
 
-			    HINTERNET hConnect = InternetConnect(hSession, "41j.com",INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 1);
+        HINTERNET hConnect = InternetConnect(hSession, "41j.com",INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 1);
 
-			    HINTERNET hRequest = HttpOpenRequest(hConnect, (const char*)"POST","sc/sc.php", NULL, NULL, (const char**)"*/*\0", 0, 1);
+        HINTERNET hRequest = HttpOpenRequest(hConnect, (const char*)"POST","sc/sc.php", NULL, NULL, (const char**)"*/*\0", 0, 1);
 
-			    BOOL sent= HttpSendRequest(hRequest, hdrs, strlen(hdrs), buffer, strlen(buffer));
-			 
-			    //close any valid internet-handles
-			    InternetCloseHandle(hSession);
-			    InternetCloseHandle(hConnect);
-			    InternetCloseHandle(hRequest);
+        BOOL sent= HttpSendRequest(hRequest, hdrs, strlen(hdrs), buffer, strlen(buffer));
 
-			}
-	private: System::Void OpenPort() {
-	  FT_STATUS ftStatus = FT_OK;
-	  ftStatus = FT_Open(0, &handle);
-	}
+        //close any valid internet-handles
+        InternetCloseHandle(hSession);
+        InternetCloseHandle(hConnect);
+        InternetCloseHandle(hRequest);
 
- 	private: System::Void ClosePort() {
-      if(handle) {
-        FT_Close(handle);
-		handle = NULL;
-	  }
-	}
+    }
 
+    private: System::Void OpenPort() {
+        FT_STATUS ftStatus = FT_OK;
+        ftStatus = FT_Open(0, &handle);
+    }
+
+    private: System::Void ClosePort() {
+        if(handle) {
+            FT_Close(handle);
+            handle = NULL;
+        }
+    }
 
     private: System::Void runFlash(char *szUrl) {
         // Download flash image from http://41j.com/
@@ -644,6 +639,18 @@ namespace TryUSB
         UpdateUserMessage("Running, Firmware Is Being Flashed, Do Not Disconnect", false);
         char* firmware_version = get_firmware_version_from_file(szFileName);
         System::String^ s_firmware_version = char_star_to_system_string(firmware_version);
+
+        System::String^ message_box_text = "Update firmware from " + m_cur_version_string + " to " + s_firmware_version;
+
+        if( MessageBox::Show(message_box_text, 
+                            "Firmware flash confirmation", 
+                            MessageBoxButtons::OKCancel, 
+                            MessageBoxIcon::Exclamation, 
+                            MessageBoxDefaultButton::Button1) == ::System::Windows::Forms::DialogResult::Cancel ) {
+            UpdateUserMessage("Idle, " + get_connection_status_string(), true);
+            return;
+        }
+
         UpdateUserMessage("Running, Firmware Being Flashed Is Version " + s_firmware_version, false);
         backgroundWorkerRunFlashLocal->RunWorkerAsync(char_star_to_system_string(szFileName));
     }
@@ -730,9 +737,6 @@ namespace TryUSB
     }
 
     private: System::Void btnTest_Click(System::Object ^ sender, System::EventArgs ^  e) {
-        printf("btnTest_Click\n");
-        Console::WriteLine("btnTest_Click\n");
-        //create_graph("C://Users//Owner//test//test1.png");
         UpdateUserMessage("start running test", false);
         backgroundWorkerTest->RunWorkerAsync();
     }
@@ -834,13 +838,16 @@ namespace TryUSB
 
     private: System::String^ get_connection_status_string() {
         bool device_is_connected = is_connected();
-        System::String^ status = "no device found";
+
+        char* cs_version = do_get_version();
+        m_cur_version_string = char_star_to_system_string(cs_version);
+
+        System::String^ status = "no device found - " + m_cur_version_string;
         if (device_is_connected) {
-            status = "device found and connected";
+            status = "device found and connected - " + m_cur_version_string;
         }
         return status;
     }
-
 
     private: System::Void FillComboBox(UInt32 dwDescFlags) {
     

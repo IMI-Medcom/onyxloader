@@ -157,11 +157,11 @@ u32 ser_read( int id, u8* dest, u32 maxsize )
 
     if(ftStatus == FT_OK) {
       if((ftStatus = FT_Read(ftHandle[id], dest, maxsize, &dwBytesRead)) != FT_OK) {
-	printf("Error FT_Read(%d)\n", ftStatus);
+        printf("Error FT_Read(%d)\n", ftStatus);
       }
       else {
-	if( ser_dbg )
-	  printf("FT_Read = %d\n", dwBytesRead);
+        if( ser_dbg )
+        printf("FT_Read = %d\n", dwBytesRead);
       }
     }
     else {

@@ -21,17 +21,30 @@ System::String ^ char_star_to_system_string(const char * in) {
 
 char* get_firmware_version_from_file(char* filename) {
 
-    char* unknown_version_string = "unknown";
+    char* unknown_version_string = new char[8];
+    std::string unknown = "unknown";
+    for(size_t i = 0; i < unknown.size(); i++) {
+        unknown_version_string[i] = unknown[i];
+    }
+    unknown_version_string[7] = '\0';
+
     std::string::size_type version_length = 20;
 
-    //const char* filename = argv[1];
     const char* search_term = "VERSION:";
     size_t search_term_size = strlen(search_term);
 
     std::ifstream file(filename, std::ios::binary);
     if (file) {
         file.seekg(0, std::ios::end);
-        size_t file_size = file.tellg();
+        size_t file_size = 0;
+        long long ll_file_size = file.tellg();
+        if(ll_file_size < 0) {
+            return unknown_version_string;
+        }
+        else {
+            file_size = static_cast<size_t>(ll_file_size);
+        }
+
         file.seekg(0, std::ios::beg);
         std::string file_content;
         file_content.reserve(file_size);
@@ -39,9 +52,8 @@ char* get_firmware_version_from_file(char* filename) {
         std::streamsize chars_read;
 
         while (file.read(buffer, sizeof buffer), chars_read = file.gcount()) {
-            file_content.append(buffer, chars_read);
+            file_content.append(buffer, static_cast<unsigned int>(chars_read) );
         }
-
 
         if (file.eof()) {
             for (std::string::size_type offset = 0, found_at;

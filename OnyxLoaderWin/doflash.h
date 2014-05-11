@@ -20,6 +20,7 @@
 
 #include <errno.h>
 #include <limits.h>
+#include <sstream>
 
 #include "CLI_FTD2XX.h"
 //#include "FTD2XX.h"
@@ -410,6 +411,47 @@ char *read_to_prompt(int id) {
     
 }
 
+char *read_to_prompt2(int id) {
+
+  char *data = (char *)malloc(10000);
+  int   data_size = 10000;
+  int   wrote_size = 0;
+
+  //return second entry post new line, not command sent
+  int new_lines_seen = 0;
+
+  int b = 0;
+  int lb = 0;
+  for (;;) {
+    lb = b;
+    b = ser_read_byte(id);
+    if (b == -1) {
+      return data;
+    }
+
+    if(new_lines_seen == 1) {
+      data[wrote_size] = b;
+      data[wrote_size + 1] = 0;
+      wrote_size++;
+    }
+
+    if (wrote_size == (data_size - 5)) {
+      data = (char *)realloc(data, data_size + 10000);
+      data_size += 10000;
+    }
+
+    //\n\r = CR + LF
+    if ((lb == 13) && (b == 10)) {
+      new_lines_seen++;
+      if (new_lines_seen == 2) {
+        return data;
+      }
+    }
+  }
+
+}
+
+
 char *do_get_log_csv() {
     
     // open serial ports
@@ -511,7 +553,8 @@ char *do_get_log_csv() {
 
 char* do_get_version() {
     // open serial ports
-    int id = openSerialPorts8N1(115200);
+    int baud = 115200;
+    int id = openSerialPorts8N1(baud);
 
     ser_write(id, (const u8 *) "\r\n\r\n", 4);
     Sleep(500);
@@ -521,12 +564,10 @@ char* do_get_version() {
 
     printf("device id: %d\n", id);
 
-    // Send LOGXFER
-    //ser_write(id, (const u8 *) "VERSION\n", 8);
-    ser_write(id, (const u8 *) "GUID\n", 8);
-    char *version = read_to_prompt(id);
+    ser_write(id, (const u8 *) "VERSION\n", 8);
+    //ser_write(id, (const u8 *) "GUID\n", 8);
+    char *version = read_to_prompt2(id);
 
-    // close serial ports
     closeSerialPorts();
 
     return version;
@@ -544,7 +585,6 @@ bool is_connected() {
     else {
         return true;
     }
-
 }
 
 
