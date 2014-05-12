@@ -838,14 +838,14 @@ namespace TryUSB
 
     private: System::String^ get_connection_status_string() {
         bool device_is_connected = is_connected();
+        System::String^ status = "no device found";
 
-        char* cs_version = do_get_version();
-        m_cur_version_string = char_star_to_system_string(cs_version);
-
-        System::String^ status = "no device found - " + m_cur_version_string;
-        if (device_is_connected) {
+        if(device_is_connected) {
+            char* cs_version = do_get_version();
+            m_cur_version_string = char_star_to_system_string(cs_version);
             status = "device found and connected - " + m_cur_version_string;
         }
+ 
         return status;
     }
 
