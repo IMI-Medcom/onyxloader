@@ -1,20 +1,20 @@
 # set the name of the installer
-Name "Onyx Firmware Loader"
-!define VERSION_NAME "v0_5"
+Name "OnyxLinkInstaller"
+!define VERSION_NAME "v1_0"
 
 
-Outfile "Onyx_firmware_loader_${VERSION_NAME}.exe"
+Outfile "OnyxLink_installer_${VERSION_NAME}.exe"
 
 # define the directory to install to, Program Files (x86) in this case as specified  
 # by the predefined $PROGRAMFILES variable
 Section "Copy binaries"
 
   Var /GLOBAL INSTALL_LOCATION
-  StrCpy $INSTALL_LOCATION $PROGRAMFILES\OnyxLoader
+  StrCpy $INSTALL_LOCATION $PROGRAMFILES\OnyxLink
 
   # define the output path for this file
   SetOutPath $INSTALL_LOCATION
-  File /nonfatal /a /r "OnyxLoader\" #note back slash at the end
+  File /nonfatal /a /r "OnyxLink\" #note back slash at the end
 SectionEnd
 
 # Visual Studio 2013 Redistributable packages
@@ -24,5 +24,5 @@ SectionIn RO
 SectionEnd
 
 Section "Create desktop shortcut"
-  CreateShortCut "$DESKTOP\OnyxLoader.lnk" "$INSTALL_LOCATION\OnyxLoader.exe" ""
+  CreateShortCut "$DESKTOP\OnyxLink.lnk" "$INSTALL_LOCATION\OnyxLink.exe" ""
 SectionEnd

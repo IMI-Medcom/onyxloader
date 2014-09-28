@@ -284,7 +284,7 @@ namespace TryUSB
             this->label2->Name = L"label2";
             this->label2->Size = System::Drawing::Size(52, 12);
             this->label2->TabIndex = 8;
-            this->label2->Text = L"Version 0.5";
+            this->label2->Text = L"Version 1.0";
             // 
             // btnProgLocal
             // 
@@ -406,7 +406,7 @@ namespace TryUSB
             this->MaximumSize = System::Drawing::Size(1500, 600);
             this->MinimumSize = System::Drawing::Size(303, 220);
             this->Name = L"Form1";
-            this->Text = L"OnyxLoader";
+            this->Text = L"OnyxLink";
             this->Load += gcnew System::EventHandler(this, &Form1::Form1_Load);
             this->ResumeLayout(false);
             this->PerformLayout();
