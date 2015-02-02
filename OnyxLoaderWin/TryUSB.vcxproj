@@ -121,7 +121,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
-    <ClCompile Include="Form1.cpp" />
+    <ClCompile Include="OnyxLinkForm.cpp" />
     <ClCompile Include="jsmn.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -133,7 +133,7 @@
   <ItemGroup>
     <ClInclude Include="CLI_FTD2XX.h" />
     <ClInclude Include="doflash.h" />
-    <ClInclude Include="Form1.h">
+    <ClInclude Include="OnyxLinkForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
     <ClInclude Include="FTD2XX.H" />
@@ -159,8 +159,8 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Form1.resX">
-      <DependentUpon>Form1.h</DependentUpon>
+    <EmbeddedResource Include="OnyxLinkForm.resX">
+      <DependentUpon>OnyxLinkForm.h</DependentUpon>
       <LogicalName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">TryUSB.Form1.resources</LogicalName>
       <LogicalName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">TryUSB.Form1.resources</LogicalName>
     </EmbeddedResource>
