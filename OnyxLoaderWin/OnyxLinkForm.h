@@ -142,7 +142,8 @@ namespace TryUSB
 
 
     private: System::Windows::Forms::Label ^  label1;
-    private: System::Windows::Forms::Label ^  label2;
+    private: System::Windows::Forms::Label^  OnyxLink_version_label;
+
     private: System::Windows::Forms::Label ^  label3;
     private: System::Windows::Forms::Button^  btnProgLocal;
     private: System::Windows::Forms::Label^  StatusLabel;
@@ -161,11 +162,11 @@ namespace TryUSB
     private: System::Windows::Forms::Button^  btnCloseGraph;
 
     //for restoring old width and height when closing graph
-    private: int g_form_width;
-    private: int g_form_height;
-
+    private: int m_form_width;
+    private: int m_form_height;
+    private: System::Boolean m_adv_features_enabled;
     private: System::String^ m_cur_version_string;
-    private: bool m_adv_features_enabled;
+
 
     private:
         /// <summary>
@@ -188,7 +189,7 @@ namespace TryUSB
             this->btnSave = (gcnew System::Windows::Forms::Button());
             this->btnSetTime = (gcnew System::Windows::Forms::Button());
             this->label1 = (gcnew System::Windows::Forms::Label());
-            this->label2 = (gcnew System::Windows::Forms::Label());
+            this->OnyxLink_version_label = (gcnew System::Windows::Forms::Label());
             this->btnProgLocal = (gcnew System::Windows::Forms::Button());
             this->StatusLabel = (gcnew System::Windows::Forms::Label());
             this->progressBar1 = (gcnew System::Windows::Forms::ProgressBar());
@@ -223,6 +224,7 @@ namespace TryUSB
             // btnProgBeta
             // 
             this->btnProgBeta->BackColor = System::Drawing::Color::White;
+            this->btnProgBeta->Enabled = false;
             this->btnProgBeta->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
             this->btnProgBeta->Location = System::Drawing::Point(189, 54);
             this->btnProgBeta->Name = L"btnProgBeta";
@@ -230,12 +232,12 @@ namespace TryUSB
             this->btnProgBeta->TabIndex = 3;
             this->btnProgBeta->Text = L"Beta Release";
             this->btnProgBeta->UseVisualStyleBackColor = false;
-            this->btnProgBeta->Enabled = false;
             this->btnProgBeta->Click += gcnew System::EventHandler(this, &Form1::btnProgBeta_Click);
             // 
             // btnProgExp
             // 
             this->btnProgExp->BackColor = System::Drawing::Color::White;
+            this->btnProgExp->Enabled = false;
             this->btnProgExp->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
             this->btnProgExp->Location = System::Drawing::Point(189, 83);
             this->btnProgExp->Name = L"btnProgExp";
@@ -243,7 +245,6 @@ namespace TryUSB
             this->btnProgExp->TabIndex = 4;
             this->btnProgExp->Text = L"Experimental Release";
             this->btnProgExp->UseVisualStyleBackColor = false;
-            this->btnProgExp->Enabled = false;
             this->btnProgExp->Click += gcnew System::EventHandler(this, &Form1::btnProgExp_Click);
             // 
             // btnSave
@@ -279,20 +280,21 @@ namespace TryUSB
             this->label1->TabIndex = 7;
             this->label1->Text = L"Update Firmware";
             // 
-            // label2
+            // OnyxLink_version_label
             // 
-            this->label2->AutoSize = true;
-            this->label2->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 6.75F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
-                static_cast<System::Byte>(0)));
-            this->label2->Location = System::Drawing::Point(0, 0);
-            this->label2->Name = L"label2";
-            this->label2->Size = System::Drawing::Size(52, 12);
-            this->label2->TabIndex = 8;
-            this->label2->Text = L"Version 1.0";
+            this->OnyxLink_version_label->AutoSize = true;
+            this->OnyxLink_version_label->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 6.75F, System::Drawing::FontStyle::Regular,
+                System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+            this->OnyxLink_version_label->Location = System::Drawing::Point(0, 0);
+            this->OnyxLink_version_label->Name = L"OnyxLink_version_label";
+            this->OnyxLink_version_label->Size = System::Drawing::Size(52, 12);
+            this->OnyxLink_version_label->TabIndex = 8;
+            this->OnyxLink_version_label->Text = L"Version 1.1";
             // 
             // btnProgLocal
             // 
             this->btnProgLocal->BackColor = System::Drawing::Color::White;
+            this->btnProgLocal->Enabled = false;
             this->btnProgLocal->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
             this->btnProgLocal->Location = System::Drawing::Point(189, 112);
             this->btnProgLocal->Name = L"btnProgLocal";
@@ -300,7 +302,6 @@ namespace TryUSB
             this->btnProgLocal->TabIndex = 9;
             this->btnProgLocal->Text = L"Local Firmware";
             this->btnProgLocal->UseVisualStyleBackColor = false;
-            this->btnProgLocal->Enabled = false;
             this->btnProgLocal->Click += gcnew System::EventHandler(this, &Form1::btnProgLocal_Click);
             // 
             // StatusLabel
@@ -383,14 +384,6 @@ namespace TryUSB
             this->label3->Size = System::Drawing::Size(29, 13);
             this->label3->TabIndex = 16;
             this->label3->Text = L"Misc";
-
-            // Set KeyPreview object to true to allow the form to process  
-            // the key before the control with focus processes it. 
-            m_adv_features_enabled = false;
-            this->KeyPreview = true;
-            this->KeyDown += gcnew System::Windows::Forms::KeyEventHandler(this, &Form1::advanced_KeyDown);
-
-
             // 
             // Form1
             // 
@@ -405,7 +398,7 @@ namespace TryUSB
             this->Controls->Add(this->progressBar1);
             this->Controls->Add(this->StatusLabel);
             this->Controls->Add(this->btnProgLocal);
-            this->Controls->Add(this->label2);
+            this->Controls->Add(this->OnyxLink_version_label);
             this->Controls->Add(this->label1);
             this->Controls->Add(this->btnSetTime);
             this->Controls->Add(this->btnSave);
@@ -414,6 +407,7 @@ namespace TryUSB
             this->Controls->Add(this->btnProgRelease);
             this->Controls->Add(this->btnClose);
             this->Icon = (cli::safe_cast<System::Drawing::Icon^>(resources->GetObject(L"$this.Icon")));
+            this->KeyPreview = true;
             this->Location = System::Drawing::Point(56, 48);
             this->MaximizeBox = false;
             this->MaximumSize = System::Drawing::Size(1500, 600);
@@ -421,7 +415,7 @@ namespace TryUSB
             this->Name = L"Form1";
             this->Text = L"OnyxLink";
             this->Load += gcnew System::EventHandler(this, &Form1::Form1_Load);
-
+            this->KeyDown += gcnew System::Windows::Forms::KeyEventHandler(this, &Form1::advanced_KeyDown);
             this->ResumeLayout(false);
             this->PerformLayout();
 
@@ -472,12 +466,13 @@ namespace TryUSB
         BackgroundWorker^ worker = dynamic_cast<BackgroundWorker^>(sender);
         System::String ^ filename = e->Argument->ToString();
         get_data_and_write_csv(filename);
+        //why not plot the data that's just been saved
+        plot_data(filename);
     }
 
     private: System::Void backgroundWorkerRunSaveData_RunWorkerCompleted(Object^ sender, RunWorkerCompletedEventArgs^ e) {
         UpdateUserMessage("Idle, Device Is Connected");
         StopProgressBar();
-        backgroundWorkerRunPlotData->RunWorkerAsync();
     }
 
     private: System::Void get_data_and_write_csv(String^ filename) {
@@ -491,8 +486,6 @@ namespace TryUSB
         }
         fs->Close();
         MessageBox::Show( "Save Complete" );
-        //always plot data that's saved
-        plot_data(filename);
     }
 
     private: System::Void btnSetTime_Click(System::Object ^  sender, System::EventArgs ^  e) {
@@ -786,7 +779,9 @@ namespace TryUSB
                                   0,                // create unique name 
                                   szFileName);      // buffer for name
 
-        get_data_and_write_csv(char_star_to_system_string(szFileName) );
+        String^ filename = char_star_to_system_string(szFileName);
+        get_data_and_write_csv(filename);
+        plot_data(filename);
     }
                          
     private: System::Void backgroundWorkerRunPlotData_RunWorkerCompleted(Object^ sender, RunWorkerCompletedEventArgs^ e) {
@@ -795,7 +790,7 @@ namespace TryUSB
     }
 
     private: System::Void btnClose_Graph(System::Object ^ sender, System::EventArgs ^  e) {
-        this->Size = System::Drawing::Size(g_form_width, g_form_height);
+        this->Size = System::Drawing::Size(m_form_width, m_form_height);
     }
 
     private: System::Void plot_data(String^ filename) {
@@ -807,8 +802,8 @@ namespace TryUSB
     private: System::Void SetSize() {
         
         //for restoring when closing graph
-        g_form_width = this->Width;
-        g_form_height = this->Height;
+        m_form_width = this->Width;
+        m_form_height = this->Height;
 
         int graph_start_x = 10;
         int graph_start_y = this->Height;
