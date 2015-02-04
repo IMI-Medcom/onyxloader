@@ -55,7 +55,8 @@ namespace TryUSB
         {
             InitializeComponent();
             InitializeBackgoundWorker();
-            UpdateUserMessage(get_connection_status_string(), true);
+            UpdateUserMessage(get_connection_status_string() );
+            StopProgressBar();
         }
 
     private:
@@ -164,6 +165,7 @@ namespace TryUSB
     private: int g_form_height;
 
     private: System::String^ m_cur_version_string;
+    private: bool m_adv_features_enabled;
 
     private:
         /// <summary>
@@ -384,6 +386,7 @@ namespace TryUSB
 
             // Set KeyPreview object to true to allow the form to process  
             // the key before the control with focus processes it. 
+            m_adv_features_enabled = false;
             this->KeyPreview = true;
             this->KeyDown += gcnew System::Windows::Forms::KeyEventHandler(this, &Form1::advanced_KeyDown);
 
@@ -460,7 +463,8 @@ namespace TryUSB
             return;
         }
 
-        UpdateUserMessage("Running, Acquiring and Plotting Data", false);
+        UpdateUserMessage("Running, Acquiring and Plotting Data");
+        StartProgressBar();
         backgroundWorkerRunSaveData->RunWorkerAsync(sfd->FileName);
     }
 
@@ -471,7 +475,8 @@ namespace TryUSB
     }
 
     private: System::Void backgroundWorkerRunSaveData_RunWorkerCompleted(Object^ sender, RunWorkerCompletedEventArgs^ e) {
-        UpdateUserMessage("Idle, Device Is Connected", true);
+        UpdateUserMessage("Idle, Device Is Connected");
+        StopProgressBar();
         backgroundWorkerRunPlotData->RunWorkerAsync();
     }
 
@@ -543,7 +548,8 @@ namespace TryUSB
 
     private: System::Void runFlash(char *szUrl) {
         // Download flash image from http://41j.com/
-        UpdateUserMessage("Running, Firmware Is Downloading, Do Not Disconnect", false);
+        UpdateUserMessage("Running, Firmware Is Downloading, Do Not Disconnect");
+        StartProgressBar();
         backgroundWorkerRunFlash->RunWorkerAsync( char_star_to_system_string(szUrl) );
     }
     
@@ -554,7 +560,6 @@ namespace TryUSB
 
         marshal_context ^ context = gcnew marshal_context();
         const char* szUrl = context->marshal_as<const char*>(sysUrl);
-
 
         printf("url %s\n", szUrl);
 
@@ -640,14 +645,17 @@ namespace TryUSB
     } // end of runFlash()
 
     private: System::Void backgroundWorkerRunFlash_RunWorkerCompleted(Object^ sender, RunWorkerCompletedEventArgs^ e) {
-        UpdateUserMessage("Running, Firmware Has Downloaded, Do Not Disconnect", true);
+        UpdateUserMessage("Running, Firmware Has Downloaded, Do Not Disconnect");
+        StopProgressBar();
         //String^ firmware_version_to_flash = get_firmware_version_from_file( e->Result->ToString() );
-        UpdateUserMessage("Running, Firmware Is Being Flashed, Do Not Disconnect", false);
+        UpdateUserMessage("Running, Firmware Is Being Flashed, Do Not Disconnect");
+        StartProgressBar();
         backgroundWorkerRunFlashLocal->RunWorkerAsync(e->Result->ToString());
     }
 
     private: System::Void runFlashLocal(char* szFileName) {
-        UpdateUserMessage("Running, Firmware Is Being Flashed, Do Not Disconnect", false);
+        UpdateUserMessage("Running, Firmware Is Being Flashed, Do Not Disconnect");
+        StartProgressBar();
         char* firmware_version = get_firmware_version_from_file(szFileName);
         System::String^ s_firmware_version = char_star_to_system_string(firmware_version);
 
@@ -658,11 +666,13 @@ namespace TryUSB
                             MessageBoxButtons::OKCancel, 
                             MessageBoxIcon::Exclamation, 
                             MessageBoxDefaultButton::Button1) == ::System::Windows::Forms::DialogResult::Cancel ) {
-            UpdateUserMessage("Idle, " + get_connection_status_string(), true);
+            UpdateUserMessage("Idle, " + get_connection_status_string() );
+            StopProgressBar();
             return;
         }
 
-        UpdateUserMessage("Running, Firmware Being Flashed Is Version " + s_firmware_version, false);
+        UpdateUserMessage("Running, Firmware Being Flashed Is Version " + s_firmware_version);
+        StartProgressBar();
         backgroundWorkerRunFlashLocal->RunWorkerAsync(char_star_to_system_string(szFileName));
     }
 
@@ -705,7 +715,8 @@ namespace TryUSB
     }
 
     private: System::Void backgroundWorkerRunFlashLocal_RunWorkerCompleted(Object^ sender, RunWorkerCompletedEventArgs^ e) {
-        UpdateUserMessage("Idle, " + get_connection_status_string(), true);
+        UpdateUserMessage("Idle, " + get_connection_status_string() );
+        StopProgressBar();
     }
 
     private: System::Void btnProgRelease_Click(System::Object ^  sender, System::EventArgs ^  e) {
@@ -748,12 +759,14 @@ namespace TryUSB
     }
 
     private: System::Void btnTest_Click(System::Object ^ sender, System::EventArgs ^  e) {
-        UpdateUserMessage("start running test", false);
+        UpdateUserMessage("start running test");
+        StartProgressBar();
         backgroundWorkerTest->RunWorkerAsync();
     }
 
     private: System::Void btnPlot_Data(System::Object ^ sender, System::EventArgs ^  e) {
-        UpdateUserMessage("Running, Acquiring and Plotting Data", false);
+        UpdateUserMessage("Running, Acquiring and Plotting Data");
+        StartProgressBar();
         backgroundWorkerRunPlotData->RunWorkerAsync();
     }
 
@@ -777,7 +790,8 @@ namespace TryUSB
     }
                          
     private: System::Void backgroundWorkerRunPlotData_RunWorkerCompleted(Object^ sender, RunWorkerCompletedEventArgs^ e) {
-        UpdateUserMessage("Idle, Device Is Connected", true);
+        UpdateUserMessage("Idle, Device Is Connected");
+        StopProgressBar();
     }
 
     private: System::Void btnClose_Graph(System::Object ^ sender, System::EventArgs ^  e) {
@@ -830,20 +844,23 @@ namespace TryUSB
         //char* char_version = do_get_version();
         //System::String^ version = char_star_to_system_string(char_version);
         //UpdateUserMessage(version, true);
-        UpdateUserMessage(get_connection_status_string(), true);
+        UpdateUserMessage(get_connection_status_string() );
+        StopProgressBar();
     }
 
-    private: System::Void UpdateUserMessage(System::String ^ message, bool end) {       
+    private: System::Void UpdateUserMessage(System::String ^ message) {       
         this->StatusLabel->Text = message;
-        if(!end) {
-            this->progressBar1->Style = ProgressBarStyle::Marquee;
-            this->progressBar1->MarqueeAnimationSpeed = 30;
-        }
-        else {
-            this->progressBar1->Style = ProgressBarStyle::Blocks;
-        }
-        
-        //this->Invalidate();
+        this->Update();
+    }
+
+    private: System::Void StartProgressBar(void) {
+        this->progressBar1->Style = ProgressBarStyle::Marquee;
+        this->progressBar1->MarqueeAnimationSpeed = 30;
+        this->Update();
+    }
+
+    private: System::Void StopProgressBar(void) {
+        this->progressBar1->Style = ProgressBarStyle::Blocks;
         this->Update();
     }
 
@@ -910,10 +927,20 @@ namespace TryUSB
     private: System::Void advanced_KeyDown(System::Object^  sender, System::Windows::Forms::KeyEventArgs^  e) {
 
         if(e->Control) {
-            UpdateUserMessage("advanced features enabled", true);
-            this->btnProgBeta->Enabled = true;
-            this->btnProgExp->Enabled = true;
-            this->btnProgLocal->Enabled = true;
+            if(m_adv_features_enabled == false) {
+                UpdateUserMessage("advanced features enabled");
+                this->btnProgBeta->Enabled = true;
+                this->btnProgExp->Enabled = true;
+                this->btnProgLocal->Enabled = true;
+                m_adv_features_enabled = true;
+            }
+            else {
+                UpdateUserMessage("advanced features disabled");
+                this->btnProgBeta->Enabled = false;
+                this->btnProgExp->Enabled = false;
+                this->btnProgLocal->Enabled = false;
+                m_adv_features_enabled = false;
+            }
             this->Update();
         }
 
