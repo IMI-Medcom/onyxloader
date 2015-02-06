@@ -1,0 +1,17 @@
+Version 1.1
+
+DONE: when saving data plot is attempted, plot goes on user prompt, can't get back to original size
+	fixed bug with saving data - data was being saved anyway.
+	
+DONE: Added ctrl press to enable "advanced features" (updating from local firmware and to beta/exp across internet)
+
+DONE: add from - to version id-ing when updating from internet
+	version 12.17 (current) no brackets
+	
+DONE: show "firmware flash completed" user message as soon as finished, not waiting for confirmation box to be OK'ed.
+	
+TODO: ability to revert to local known firmware supplied with software in case something goes wrong
+
+TODO: Can't reproduce sometimes needing ftdi and/or runtime when installing... need to do so somehow
+
+TODO: "Firmware Flash Confirmation" version stuff has white space

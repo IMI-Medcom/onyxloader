@@ -640,8 +640,13 @@ namespace TryUSB
     private: System::Void backgroundWorkerRunFlash_RunWorkerCompleted(Object^ sender, RunWorkerCompletedEventArgs^ e) {
         UpdateUserMessage("Running, Firmware Has Downloaded, Do Not Disconnect");
         StopProgressBar();
-        //String^ firmware_version_to_flash = get_firmware_version_from_file( e->Result->ToString() );
-        UpdateUserMessage("Running, Firmware Is Being Flashed, Do Not Disconnect");
+        marshal_context ^ context = gcnew marshal_context();
+        const char* cszFileName = context->marshal_as<const char*>(e->Result->ToString());
+        char szFileName[MAX_PATH];
+        strcpy(szFileName, cszFileName);
+        char *filename = (char *)szFileName;
+        String^ firmware_version_to_flash = char_star_to_system_string(get_firmware_version_from_file(filename));
+        UpdateUserMessage("Running, Firmware Being Flashed Is Version " + firmware_version_to_flash + ", Do Not Disconnect");
         StartProgressBar();
         backgroundWorkerRunFlashLocal->RunWorkerAsync(e->Result->ToString());
     }
@@ -664,7 +669,7 @@ namespace TryUSB
             return;
         }
 
-        UpdateUserMessage("Running, Firmware Being Flashed Is Version " + s_firmware_version);
+        UpdateUserMessage("Running, Firmware Being Flashed Is Version " + s_firmware_version + ", Do Not Disconnect");
         StartProgressBar();
         backgroundWorkerRunFlashLocal->RunWorkerAsync(char_star_to_system_string(szFileName));
     }
@@ -695,21 +700,27 @@ namespace TryUSB
         int result = 0;
         if (IN_DEBUG_MODE) {
             Sleep(4000);
+            result = 1;
         }
         else {
             result = do_flash_main(argc,argv);
         }
-        if (result == 0) {
+        e->Result = result;
+    }
+
+    private: System::Void backgroundWorkerRunFlashLocal_RunWorkerCompleted(Object^ sender, RunWorkerCompletedEventArgs^ e) {
+        UpdateUserMessage("Flashing Completed");
+        StopProgressBar();
+        
+        if ( (int)e->Result == 0) {
             MessageBox::Show("Flash Completed Successfully");
         }
         else {
             MessageBox::Show("Flash Programming failed");
         }
-    }
 
-    private: System::Void backgroundWorkerRunFlashLocal_RunWorkerCompleted(Object^ sender, RunWorkerCompletedEventArgs^ e) {
-        UpdateUserMessage("Idle, " + get_connection_status_string() );
-        StopProgressBar();
+        UpdateUserMessage("Idle, " + get_connection_status_string());
+
     }
 
     private: System::Void btnProgRelease_Click(System::Object ^  sender, System::EventArgs ^  e) {
@@ -830,7 +841,6 @@ namespace TryUSB
         // object. This is will be available to the  
         // RunWorkerCompleted eventhandler.
         //e->Result = ComputeFibonacci(safe_cast<Int32>(e->Argument), worker, e);
-        
 
         //Sleep(4000);
     }
@@ -864,8 +874,7 @@ namespace TryUSB
         System::String^ status = "no device found";
 
         if(device_is_connected) {
-            char* cs_version = do_get_version();
-            m_cur_version_string = char_star_to_system_string(cs_version);
+            m_cur_version_string = this->get_firmware_version_from_device();
             status = "device found and connected - " + m_cur_version_string;
         }
  
@@ -874,6 +883,27 @@ namespace TryUSB
 
     private: System::Void FillComboBox(UInt32 dwDescFlags) {
     
+    }
+
+    private: System::String^ get_firmware_version_from_device() {
+        char* cs_version = do_get_version();
+        System::String^ version = char_star_to_system_string(cs_version);
+
+        version = version->Trim();
+
+        if(version->Length == 0) {
+            version = "get_firmware_version_from_device() failed";
+            return version;
+        }
+
+        if (version->IndexOf('{') == 0) {
+            version = version->Remove(0, 1);
+        }
+        if (version->IndexOf('}') == version->Length - 1 && version->Length > 0) {
+            version = version->Remove(version->Length - 1);
+        }
+
+        return version;
     }
 
     private: System::Void StopThread() {
