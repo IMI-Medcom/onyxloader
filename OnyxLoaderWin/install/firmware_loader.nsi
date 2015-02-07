@@ -1,6 +1,6 @@
 # set the name of the installer
 Name "OnyxLinkInstaller"
-!define VERSION_NAME "v1_0"
+!define VERSION_NAME "v1_1"
 
 
 Outfile "OnyxLink_installer_${VERSION_NAME}.exe"
