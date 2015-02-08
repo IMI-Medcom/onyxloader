@@ -14,3 +14,6 @@
 *.aps
 *.tlog
 *.obj
+*.sdf
+*.sbr
+*.log
