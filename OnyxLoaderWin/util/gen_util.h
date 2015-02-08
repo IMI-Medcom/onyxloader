@@ -75,4 +75,14 @@ char* get_firmware_version_from_file(char* filename) {
 }
 
 
+bool check_if_firmware_exists(char* filename) {
+    std::ifstream firmware_file(filename, std::ios::binary);
+    if (!firmware_file) {
+        return false;
+    }
+    else {
+        return true;
+    }
+}
+
 #endif /* GEN_UTIL_H_ */

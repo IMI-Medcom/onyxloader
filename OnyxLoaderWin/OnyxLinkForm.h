@@ -135,7 +135,7 @@ namespace TryUSB
     private: ManualResetEvent ^ ev;
     private: System::Windows::Forms::Button ^  btnProgBeta;
     private: System::Windows::Forms::Button ^  btnProgExp;
-
+    private: System::Windows::Forms::Button ^  btnReset;
 
     private: System::Windows::Forms::Button ^  btnSave;
     private: System::Windows::Forms::Button ^  btnSetTime;
@@ -165,6 +165,7 @@ namespace TryUSB
     private: int m_form_width;
     private: int m_form_height;
     private: System::Boolean m_adv_features_enabled;
+
     private: System::String^ m_cur_version_string;
 
 
@@ -183,21 +184,28 @@ namespace TryUSB
             this->components = (gcnew System::ComponentModel::Container());
             System::ComponentModel::ComponentResourceManager^  resources = (gcnew System::ComponentModel::ComponentResourceManager(Form1::typeid));
             this->btnClose = (gcnew System::Windows::Forms::Button());
+
+            this->btnSave = (gcnew System::Windows::Forms::Button());
+            this->btnPlot = (gcnew System::Windows::Forms::Button());
+            this->btnSetTime = (gcnew System::Windows::Forms::Button());
+            this->btnTest = (gcnew System::Windows::Forms::Button());
+
             this->btnProgRelease = (gcnew System::Windows::Forms::Button());
+            this->btnReset = (gcnew System::Windows::Forms::Button());
             this->btnProgBeta = (gcnew System::Windows::Forms::Button());
             this->btnProgExp = (gcnew System::Windows::Forms::Button());
-            this->btnSave = (gcnew System::Windows::Forms::Button());
-            this->btnSetTime = (gcnew System::Windows::Forms::Button());
+            this->btnProgLocal = (gcnew System::Windows::Forms::Button());
+
             this->label1 = (gcnew System::Windows::Forms::Label());
             this->OnyxLink_version_label = (gcnew System::Windows::Forms::Label());
-            this->btnProgLocal = (gcnew System::Windows::Forms::Button());
+
             this->StatusLabel = (gcnew System::Windows::Forms::Label());
             this->progressBar1 = (gcnew System::Windows::Forms::ProgressBar());
-            this->btnTest = (gcnew System::Windows::Forms::Button());
             this->zedGraphControl1 = (gcnew ZedGraph::ZedGraphControl());
-            this->btnPlot = (gcnew System::Windows::Forms::Button());
+            
             this->btnCloseGraph = (gcnew System::Windows::Forms::Button());
             this->label3 = (gcnew System::Windows::Forms::Label());
+
             this->SuspendLayout();
             // 
             // btnClose
@@ -226,7 +234,7 @@ namespace TryUSB
             this->btnProgBeta->BackColor = System::Drawing::Color::White;
             this->btnProgBeta->Enabled = false;
             this->btnProgBeta->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
-            this->btnProgBeta->Location = System::Drawing::Point(189, 54);
+            this->btnProgBeta->Location = System::Drawing::Point(189, 83);
             this->btnProgBeta->Name = L"btnProgBeta";
             this->btnProgBeta->Size = System::Drawing::Size(138, 23);
             this->btnProgBeta->TabIndex = 3;
@@ -239,7 +247,7 @@ namespace TryUSB
             this->btnProgExp->BackColor = System::Drawing::Color::White;
             this->btnProgExp->Enabled = false;
             this->btnProgExp->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
-            this->btnProgExp->Location = System::Drawing::Point(189, 83);
+            this->btnProgExp->Location = System::Drawing::Point(189, 112);
             this->btnProgExp->Name = L"btnProgExp";
             this->btnProgExp->Size = System::Drawing::Size(138, 23);
             this->btnProgExp->TabIndex = 4;
@@ -296,7 +304,7 @@ namespace TryUSB
             this->btnProgLocal->BackColor = System::Drawing::Color::White;
             this->btnProgLocal->Enabled = false;
             this->btnProgLocal->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
-            this->btnProgLocal->Location = System::Drawing::Point(189, 112);
+            this->btnProgLocal->Location = System::Drawing::Point(189, 141);
             this->btnProgLocal->Name = L"btnProgLocal";
             this->btnProgLocal->Size = System::Drawing::Size(138, 23);
             this->btnProgLocal->TabIndex = 9;
@@ -307,7 +315,7 @@ namespace TryUSB
             // StatusLabel
             // 
             this->StatusLabel->AutoSize = true;
-            this->StatusLabel->Location = System::Drawing::Point(43, 166);
+            this->StatusLabel->Location = System::Drawing::Point(43, 203);
             this->StatusLabel->MaximumSize = System::Drawing::Size(270, 0);
             this->StatusLabel->MinimumSize = System::Drawing::Size(270, 0);
             this->StatusLabel->Name = L"StatusLabel";
@@ -319,7 +327,7 @@ namespace TryUSB
             // 
             // progressBar1
             // 
-            this->progressBar1->Location = System::Drawing::Point(0, 145);
+            this->progressBar1->Location = System::Drawing::Point(0, 182);
             this->progressBar1->MarqueeAnimationSpeed = 0;
             this->progressBar1->Name = L"progressBar1";
             this->progressBar1->Size = System::Drawing::Size(352, 18);
@@ -362,7 +370,7 @@ namespace TryUSB
             this->btnPlot->TabIndex = 14;
             this->btnPlot->Text = L"Plot Data";
             this->btnPlot->UseVisualStyleBackColor = false;
-            this->btnPlot->Click += gcnew System::EventHandler(this, &Form1::btnPlot_Data);
+            this->btnPlot->Click += gcnew System::EventHandler(this, &Form1::btnPlot_Data_Click);
             // 
             // btnCloseGraph
             // 
@@ -374,7 +382,7 @@ namespace TryUSB
             this->btnCloseGraph->TabIndex = 15;
             this->btnCloseGraph->Text = L"Close Graph";
             this->btnCloseGraph->UseVisualStyleBackColor = false;
-            this->btnCloseGraph->Click += gcnew System::EventHandler(this, &Form1::btnClose_Graph);
+            this->btnCloseGraph->Click += gcnew System::EventHandler(this, &Form1::btnClose_Graph_Click);
             // 
             // label3
             // 
@@ -385,11 +393,24 @@ namespace TryUSB
             this->label3->TabIndex = 16;
             this->label3->Text = L"Misc";
             // 
+            // btnReset
+            // 
+            this->btnReset->BackColor = System::Drawing::Color::White;
+            this->btnReset->FlatStyle = System::Windows::Forms::FlatStyle::Flat;
+            this->btnReset->Location = System::Drawing::Point(189, 54);
+            this->btnReset->Name = L"btnReset";
+            this->btnReset->Size = System::Drawing::Size(138, 23);
+            this->btnReset->TabIndex = 17;
+            this->btnReset->Text = L"Reset";
+            this->btnReset->UseVisualStyleBackColor = false;
+            this->btnReset->Click += gcnew System::EventHandler(this, &Form1::btnReset_Click);
+            // 
             // Form1
             // 
             this->AutoScaleBaseSize = System::Drawing::Size(5, 13);
             this->BackColor = System::Drawing::Color::Azure;
-            this->ClientSize = System::Drawing::Size(352, 193);
+            this->ClientSize = System::Drawing::Size(352, 236);
+            this->Controls->Add(this->btnReset);
             this->Controls->Add(this->label3);
             this->Controls->Add(this->btnCloseGraph);
             this->Controls->Add(this->btnPlot);
@@ -411,7 +432,7 @@ namespace TryUSB
             this->Location = System::Drawing::Point(56, 48);
             this->MaximizeBox = false;
             this->MaximumSize = System::Drawing::Size(1500, 600);
-            this->MinimumSize = System::Drawing::Size(303, 220);
+            this->MinimumSize = System::Drawing::Size(368, 231);
             this->Name = L"Form1";
             this->Text = L"OnyxLink";
             this->Load += gcnew System::EventHandler(this, &Form1::Form1_Load);
@@ -652,6 +673,13 @@ namespace TryUSB
     }
 
     private: System::Void runFlashLocal(char* szFileName) {
+
+        if (!check_if_firmware_exists(szFileName)) {
+            UpdateUserMessage("Firmware file not found");
+            StopProgressBar();
+            return;
+        }
+
         UpdateUserMessage("Running, Firmware Is Being Flashed, Do Not Disconnect");
         StartProgressBar();
         char* firmware_version = get_firmware_version_from_file(szFileName);
@@ -740,6 +768,23 @@ namespace TryUSB
         runFlash(szUrl);
     }
 
+    //ability to reset to firmware included with OnyxLink in case of something going wrong and no internet connection
+    private: System::Void btnReset_Click(System::Object ^  sender, System::EventArgs ^  e) {
+        MessageBox::Show("Programming possibly out of date firmware included with OnyxLink - update to latest release when next possible");
+
+        char* reset_firmware = "\\safecast_reset_firmware.bin";
+
+        char szFileName[MAX_PATH];
+        GetCurrentDirectory(MAX_PATH, szFileName);
+
+        strcat(szFileName, reset_firmware);
+
+        String^ filename = char_star_to_system_string(szFileName);
+        //MessageBox::Show(filename);
+
+        runFlashLocal(szFileName);
+    }
+
     private: System::Void btnProgLocal_Click(System::Object ^ sender, System::EventArgs ^  e) {
         MessageBox::Show("Programming Local Firmware: This firmware is for user testing only, and is not supported by Medcom International.");
         
@@ -768,7 +813,7 @@ namespace TryUSB
         backgroundWorkerTest->RunWorkerAsync();
     }
 
-    private: System::Void btnPlot_Data(System::Object ^ sender, System::EventArgs ^  e) {
+    private: System::Void btnPlot_Data_Click(System::Object ^ sender, System::EventArgs ^  e) {
         UpdateUserMessage("Running, Acquiring and Plotting Data");
         StartProgressBar();
         backgroundWorkerRunPlotData->RunWorkerAsync();
@@ -800,7 +845,7 @@ namespace TryUSB
         StopProgressBar();
     }
 
-    private: System::Void btnClose_Graph(System::Object ^ sender, System::EventArgs ^  e) {
+    private: System::Void btnClose_Graph_Click(System::Object ^ sender, System::EventArgs ^  e) {
         this->Size = System::Drawing::Size(m_form_width, m_form_height);
     }
 
