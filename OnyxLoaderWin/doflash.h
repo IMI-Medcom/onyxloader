@@ -551,7 +551,8 @@ char *do_get_log_csv() {
     return outdata;
 }
 
-char* do_get_version() {
+char* get_and_close(const char* command) {
+
     // open serial ports
     int baud = 115200;
     int id = openSerialPorts8N1(baud);
@@ -564,13 +565,23 @@ char* do_get_version() {
 
     printf("device id: %d\n", id);
 
-    ser_write(id, (const u8 *) "VERSION\n", 8);
+    ser_write(id, (const u8 *) command, 8);
     //ser_write(id, (const u8 *) "GUID\n", 8);
-    char *version = read_to_prompt2(id);
+    char *data = read_to_prompt2(id);
 
     closeSerialPorts();
 
-    return version;
+    return data;
+}
+
+char* do_get_version() {
+    const char* command = "VERSION\n";
+    return get_and_close(command);
+}
+
+char* get_current_cpm() {
+    const char* command = "GETCPM\n";
+    return get_and_close(command);
 }
 
 bool is_connected() {

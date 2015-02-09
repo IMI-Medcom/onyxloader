@@ -5,6 +5,9 @@
 #include "plot_data.h"
 #include "CLI_FTD2XX.h"
 
+#include "rapidjson/document.h"
+using namespace rapidjson;
+
 #include <Vcclr.h>
 #include <wininet.h>
 
@@ -57,6 +60,8 @@ namespace TryUSB
             InitializeBackgoundWorker();
             UpdateUserMessage(get_connection_status_string() );
             StopProgressBar();
+            //UpdateUserMessage(get_current_cpm_from_device() );
+
         }
 
     private:
@@ -891,9 +896,6 @@ namespace TryUSB
     }
 
     private: System::Void backgroundWorkerTest_RunWorkerCompleted(Object^ /*sender*/, RunWorkerCompletedEventArgs^ e ) {
-        //char* char_version = do_get_version();
-        //System::String^ version = char_star_to_system_string(char_version);
-        //UpdateUserMessage(version, true);
         UpdateUserMessage(get_connection_status_string() );
         StopProgressBar();
     }
@@ -931,24 +933,37 @@ namespace TryUSB
     }
 
     private: System::String^ get_firmware_version_from_device() {
-        char* cs_version = do_get_version();
-        System::String^ version = char_star_to_system_string(cs_version);
+        const char* version_json = do_get_version();
 
-        version = version->Trim();
+        Document document;
+        document.Parse<0>(version_json);
 
-        if(version->Length == 0) {
-            version = "get_firmware_version_from_device() failed";
-            return version;
+        if (!document.HasParseError() && (document.HasMember("version")) ) {
+            return char_star_to_system_string(document["version"].GetString());
+        }
+        //if firmware is old and version isn't json just return string
+        return char_star_to_system_string(version_json);
+    }
+
+    private: System::String^ get_current_cpm_from_device() {
+
+        const char* cpm_json = get_current_cpm();
+
+        Document document;
+        document.Parse<0>(cpm_json);
+
+        if ( !document.HasParseError() && (document.HasMember("cpm")) ) {
+
+            //assert(document.HasMember("cpm"));
+            //assert(document["cpm"].IsString());
+            const Value& a = document["cpm"];
+            if(a.HasMember("value")) {
+                const Value& b = a["value"];
+                return System::Convert::ToString( b.GetDouble() );
+            }
         }
 
-        if (version->IndexOf('{') == 0) {
-            version = version->Remove(0, 1);
-        }
-        if (version->IndexOf('}') == version->Length - 1 && version->Length > 0) {
-            version = version->Remove(version->Length - 1);
-        }
-
-        return version;
+        return "0.0";
     }
 
     private: System::Void StopThread() {
