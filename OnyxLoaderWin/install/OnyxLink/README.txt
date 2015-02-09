@@ -4,6 +4,11 @@ FTDI device driver will be automatically installed if an internet connection is 
 
 
 OnyxLink version 1.1
+
+	Added ability to reset to firmare included with OnyxLink (in case something goes wrong and firmware server is unreachable)
+	
+	Parse JSON (for eg for version id) from newer firmware, still works with older non-JSON firmware
+
 	Fix bug when saving data - plotting is attempted, but disappeared on user prompt, can't get back to original size
 	fixed bug with saving data - data was being saved anyway.
 	
