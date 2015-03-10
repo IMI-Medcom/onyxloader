@@ -579,8 +579,13 @@ char* do_get_version() {
     return get_and_close(command);
 }
 
-char* get_current_cpm() {
+char* do_get_current_cpm() {
     const char* command = "GETCPM\n";
+    return get_and_close(command);
+}
+
+char* do_get_device_guid() {
+    const char* command = "GUID\n";
     return get_and_close(command);
 }
 

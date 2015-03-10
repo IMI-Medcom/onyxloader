@@ -5,6 +5,8 @@
 #include "plot_data.h"
 #include "CLI_FTD2XX.h"
 
+#include "Telemetry.h"
+
 #include "rapidjson/document.h"
 using namespace rapidjson;
 
@@ -17,6 +19,10 @@ using namespace msclr::interop;
 #pragma comment(lib, "wininet.lib")
 
 #define IN_DEBUG_MODE 0
+
+
+using namespace System::Diagnostics;
+
 
 namespace TryUSB
 {
@@ -58,10 +64,11 @@ namespace TryUSB
         {
             InitializeComponent();
             InitializeBackgoundWorker();
-            UpdateUserMessage(get_connection_status_string() );
-            StopProgressBar();
+            System::String^ connection_string = get_connection_status_string();
+            UpdateUserMessage(connection_string);
+            //mp_telemetry->send_message(connection_string);
+            //StopProgressBar();
             //UpdateUserMessage(get_current_cpm_from_device() );
-
         }
 
     private:
@@ -116,6 +123,13 @@ namespace TryUSB
                 //components->Dispose();
             }
             //__super::Dispose(disposing);
+
+
+            if(mp_telemetry != 0) {
+                delete mp_telemetry;
+                mp_telemetry = 0;
+            }
+
         }
     protected:
         /*void Dispose(Boolean disposing)
@@ -173,6 +187,7 @@ namespace TryUSB
 
     private: System::String^ m_cur_version_string;
 
+    private: Telemetry* mp_telemetry;
 
     private:
         /// <summary>
@@ -445,6 +460,10 @@ namespace TryUSB
             this->ResumeLayout(false);
             this->PerformLayout();
 
+
+
+            //mp_telemetry = new Telemetry();
+
         }
 
         void InitializeBackgoundWorker()
@@ -470,6 +489,22 @@ namespace TryUSB
             backgroundWorkerRunPlotData->RunWorkerCompleted += gcnew RunWorkerCompletedEventHandler(this, &Form1::backgroundWorkerRunPlotData_RunWorkerCompleted);
 
         }
+
+
+        private: System::Void Form1_Shown(Object sender, EventArgs e) {
+
+            MessageBox::Show("You are in the Form.Shown event.");
+
+        }
+        
+
+
+    protected: virtual System::Void OnLoad(EventArgs e) {
+        // any code here will run before the event is raised
+        //base.OnLoad(e);  // raises the event
+        // any code here will run after the event is raised
+    }
+
 
     private: System::Void btnSave_Click(System::Object ^  sender, System::EventArgs ^  e) {
 
@@ -568,6 +603,7 @@ namespace TryUSB
     private: System::Void runFlash(char *szUrl) {
         // Download flash image from http://41j.com/
         UpdateUserMessage("Running, Firmware Is Downloading, Do Not Disconnect");
+        check_connection_and_update_metrics();
         StartProgressBar();
         backgroundWorkerRunFlash->RunWorkerAsync( char_star_to_system_string(szUrl) );
     }
@@ -691,6 +727,10 @@ namespace TryUSB
         System::String^ s_firmware_version = char_star_to_system_string(firmware_version);
 
         System::String^ message_box_text = "Update firmware from " + m_cur_version_string + " to " + s_firmware_version;
+        marshal_context ^ context = gcnew marshal_context();
+        const char* update_message = context->marshal_as<const char*>(message_box_text);
+        
+        mp_telemetry->send_metrics_pair("attempt_updating_firmware", update_message);
 
         if( MessageBox::Show(message_box_text, 
                             "Firmware flash confirmation", 
@@ -698,6 +738,7 @@ namespace TryUSB
                             MessageBoxIcon::Exclamation, 
                             MessageBoxDefaultButton::Button1) == ::System::Windows::Forms::DialogResult::Cancel ) {
             UpdateUserMessage("Idle, " + get_connection_status_string() );
+            mp_telemetry->send_metrics_pair("attempt_updating_firmware", "user_cancelled");
             StopProgressBar();
             return;
         }
@@ -747,9 +788,11 @@ namespace TryUSB
         
         if ( (int)e->Result == 0) {
             MessageBox::Show("Flash Completed Successfully");
+            mp_telemetry->send_metrics_pair("updating_firmware_result", "success");
         }
         else {
             MessageBox::Show("Flash Programming failed");
+            mp_telemetry->send_metrics_pair("updating_firmware_result", "failure");
         }
 
         UpdateUserMessage("Idle, " + get_connection_status_string());
@@ -792,6 +835,8 @@ namespace TryUSB
 
     private: System::Void btnProgLocal_Click(System::Object ^ sender, System::EventArgs ^  e) {
         MessageBox::Show("Programming Local Firmware: This firmware is for user testing only, and is not supported by Medcom International.");
+        
+        check_connection_and_update_metrics();
         
         char szFileName[MAX_PATH];
 
@@ -886,19 +931,15 @@ namespace TryUSB
         // Get the BackgroundWorker that raised this event.
         BackgroundWorker^ worker = dynamic_cast<BackgroundWorker^>(sender);
 
-        // Assign the result of the computation 
-        // to the Result property of the DoWorkEventArgs 
-        // object. This is will be available to the  
-        // RunWorkerCompleted eventhandler.
-        //e->Result = ComputeFibonacci(safe_cast<Int32>(e->Argument), worker, e);
-
-        //Sleep(4000);
+        check_connection_and_update_metrics();
+        e->Result = get_connection_status_string();
     }
 
     private: System::Void backgroundWorkerTest_RunWorkerCompleted(Object^ /*sender*/, RunWorkerCompletedEventArgs^ e ) {
-        UpdateUserMessage(get_connection_status_string() );
+        UpdateUserMessage(e->Result->ToString());
         StopProgressBar();
     }
+
 
     private: System::Void UpdateUserMessage(System::String ^ message) {       
         this->StatusLabel->Text = message;
@@ -924,31 +965,72 @@ namespace TryUSB
             m_cur_version_string = this->get_firmware_version_from_device();
             status = "device found and connected - " + m_cur_version_string;
         }
- 
         return status;
     }
+
+
+    private: bool check_connection_and_update_metrics() {
+                  
+        if( is_connected() ) {
+            System::String^ ss_cur_version = get_firmware_version_from_device();
+            System::String^ ss_cur_guid = get_device_guid();
+
+            marshal_context ^ context = gcnew marshal_context();
+            const char* cur_version = context->marshal_as<const char*>(ss_cur_version);
+            const char* cur_guid = context->marshal_as<const char*>(ss_cur_guid);
+
+
+            if(mp_telemetry == NULL) {
+                mp_telemetry = new Telemetry(cur_version, cur_guid);
+            }
+            else {
+                mp_telemetry->add_or_update_json_key_value("guid", cur_guid);
+                mp_telemetry->add_or_update_json_key_value("version", cur_version);
+            }
+
+            mp_telemetry->send_metrics();
+            return true;
+        }
+        return false;
+    }
+
 
     private: System::Void FillComboBox(UInt32 dwDescFlags) {
     
     }
 
     private: System::String^ get_firmware_version_from_device() {
+
         const char* version_json = do_get_version();
 
         Document document;
         document.Parse<0>(version_json);
 
         if (!document.HasParseError() && (document.HasMember("version")) ) {
-            return char_star_to_system_string(document["version"].GetString());
+            const char* version = document["version"].GetString();
+            return char_star_to_system_string(version);
         }
         //if firmware is old and version isn't json just return string
         return char_star_to_system_string(version_json);
     }
 
+    private: System::String^ get_device_guid() {
+        const char* guid_json = do_get_device_guid();
+
+        Document document;
+        document.Parse<0>(guid_json);
+
+        if (!document.HasParseError() && (document.HasMember("guid"))) {
+            const char* guid = document["guid"].GetString();
+            return char_star_to_system_string(guid);
+        }
+        //if firmware is old and guid isn't json just return string
+        return char_star_to_system_string(guid_json);
+    }
+
     private: System::String^ get_current_cpm_from_device() {
 
-        const char* cpm_json = get_current_cpm();
-
+        const char* cpm_json = do_get_current_cpm();
         Document document;
         document.Parse<0>(cpm_json);
 
@@ -962,18 +1044,17 @@ namespace TryUSB
                 return System::Convert::ToString( b.GetDouble() );
             }
         }
-
         return "0.0";
     }
 
     private: System::Void StopThread() {
         bContinue = false;
-        if(hEvent)		// let the thread come out of waiting for infinite time
+        if(hEvent)  // let the thread come out of waiting for infinite time
             SetEvent(hEvent);
-        if(thrdReader && thrdReader->IsAlive) {	// stop it
-            TimeSpan waitTime = TimeSpan(0, 0, 1);	// 1 second timeout
+        if(thrdReader && thrdReader->IsAlive) { // stop it
+            TimeSpan waitTime = TimeSpan(0, 0, 1); // 1 second timeout
             if(thrdReader->Join(waitTime) != true) {
-                thrdReader->Abort();	// didnt stop the thread - take more drastic action
+                thrdReader->Abort(); // didnt stop the thread - take more drastic action
             }
         }
     }
@@ -983,7 +1064,7 @@ namespace TryUSB
         thrdReader = gcnew Thread(gcnew ThreadStart(this, &TryUSB::Form1::ReadingProc));
         bContinue = true;
         thrdReader->Start();
-        while (!thrdReader->IsAlive);	// wait for the thread to start
+        while (!thrdReader->IsAlive); // wait for the thread to start
         Thread::Sleep(1000);
     }
 
